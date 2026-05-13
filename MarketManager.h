@@ -4,7 +4,7 @@
 class MarketManager :public User
 {
 private:
-	MarketManager() = default;
+	MarketManager(const std::string& username, const std::string& password);
 public:
 	MarketManager(const MarketManager&) = delete;
 	MarketManager operator=(const MarketManager&) = delete;   // Singleton

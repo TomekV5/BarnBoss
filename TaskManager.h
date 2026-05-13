@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "User.h"
 #include "Product.h"
-class TaskManager:public User
+class TaskManager :public User
 {
 private:
 	TaskManager() = default;
