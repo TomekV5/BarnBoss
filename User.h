@@ -9,5 +9,5 @@ public:
 	User(const std::string& username, const std::string& password);
 	void logout();
 	bool changePassword(std::string oldPassword, std::string newPassword);
-	const std::string& profileInfo();
+	virtual const std::string& profileInfo();
 };

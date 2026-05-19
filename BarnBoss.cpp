@@ -1,20 +1,45 @@
-// BarnBoss.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <fstream>
+
+#include "Game.h"
+#include "Helper.h"
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	printWelcomeMessage();
+	Game game;
+	std::cout << "Load or start new game?\n";
+	std::cout << "[1] Load\n[2] New\n";
+	std::string choice;
+	std::cin >> choice;
+	if(choice == "1")
+	{
+		std::cout << "Enter save file name: ";
+		std::string filename;
+		std::cin >> filename;
+		filename = DIRECTORY + filename + TXT_EXTENSION;
+		std::ifstream in(filename);
+		if(in)
+		{
+			TaskBoard::getInstance().loadFromFile(in);
+			std::cout << "Game loaded successfully!\n";
+		}
+		else
+		{
+			std::cout << "Failed to load game. Starting new game.\n";
+		}
+	}
+	else if(choice == "2")
+	{
+		std::cout << "Starting new game...\n";
+	}
+	else
+	{
+		std::cout << "Invalid choice. Starting new game by default.\n";
+	}
+	/*TaskBoard& board = TaskBoard::getInstance();
+	board.addTask(Product(ProductType::Wheat, 10.0, 3, ProductType::Wheat_Seed, 2), 5, 100, 50);
+	board.addTask(Product(ProductType::Egg, 5.0, 2, ProductType::Chicken, 1), 10, 50, 30);
+	board.showTasks();*/
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

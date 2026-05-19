@@ -1,0 +1,19 @@
+#pragma once
+#include <string>
+
+enum class ProductType
+{
+	Undefined,
+	Wheat,
+	Corn,
+	Egg,
+	Milk,
+	Wheat_Seed,
+	Corn_Seed,
+	Chicken,
+	Cow
+};
+
+std::string toString(ProductType type);
+const ProductType& fromInt(int value);
+// Fix: Forward declare Product before using it as a return type

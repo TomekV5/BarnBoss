@@ -2,6 +2,11 @@
 
 #include <vector>
 #include <string>
+#include <memory>
+
+#include "Player.h"
+#include "TaskManager.h"
+#include "MarketManager.h"
 #include "User.h"
 #include "TaskBoard.h"
 #include "ScoreBoard.h"
@@ -10,34 +15,37 @@
 class Game
 {
 private:
-    std::vector<User*> users;
+	std::vector<std::unique_ptr<User>> users;
 
-    User* currentUser;
+	User* currentUser;
 
-    Market market;
-    TaskBoard taskBoard;
-    ScoreBoard scoreboard;
+	Market* market;
+	TaskBoard* taskBoard;
+	ScoreBoard* scoreboard;
 
-    bool running;
+	bool running;
+	void processCommand(const std::string& command);
+
+	// authentication
+	void registerUser(const std::vector<std::string>& args);
+	void loginUser(const std::vector<std::string>& args);
+	void logoutUser();
+
+	// helper methods
+	User* findUserByUsername(const std::string& username);
+
+	// save/load
+	void save();
+	void load();
 
 public:
-    Game();
-    ~Game();
+	Game();
+	~Game();
 
-    void run();
+	void LoadFromFile(const std::string& filename);
+	void CreateNewGame();
+	void run();
 
 private:
-    void processCommand(const std::string& command);
-
-    // authentication
-    void registerUser(const std::vector<std::string>& args);
-    void loginUser(const std::vector<std::string>& args);
-    void logoutUser();
-
-    // helper methods
-    User* findUserByUsername(const std::string& username);
-
-    // save/load
-    void save();
-    void load();
+	
 };

@@ -1,17 +1,6 @@
 #pragma once
 #include <iostream>
-enum class ProductType
-{
-	Undefined,
-	Wheat,
-	Corn,
-	Egg,
-	Milk,
-	Wheat_Seed,
-	Corn_Seed,
-	Chicken,
-	Cow
-};
+#include "ProductType.h"
 class Product
 {
 protected:
@@ -25,4 +14,6 @@ protected:
 public:
 	Product();
 	Product(ProductType name, double price, unsigned cycles, ProductType givenItem, unsigned givenQuontity);
+	const ProductType& getName() const;
 };
+Product fromProductType(ProductType type);
