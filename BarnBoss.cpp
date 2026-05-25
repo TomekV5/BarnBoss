@@ -7,7 +7,9 @@
 
 int main()
 {
-	printWelcomeMessage();
+	Market& market = Market::getInstance();
+	std::cout << "Current Market:\n" << market;
+	/*printWelcomeMessage();
 	Game game;
 	std::cout << "Load or start new game?\n";
 	std::cout << "[1] Load\n[2] New\n";
@@ -37,7 +39,7 @@ int main()
 	else
 	{
 		std::cout << "Invalid choice. Starting new game by default.\n";
-	}
+	}*/
 	/*TaskBoard& board = TaskBoard::getInstance();
 	board.addTask(Product(ProductType::Wheat, 10.0, 3, ProductType::Wheat_Seed, 2), 5, 100, 50);
 	board.addTask(Product(ProductType::Egg, 5.0, 2, ProductType::Chicken, 1), 10, 50, 30);

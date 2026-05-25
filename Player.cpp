@@ -28,3 +28,13 @@ bool Player::setScore(int newScore)
 	score = newScore;
 	return true;
 }
+
+double Player::getBalance() const
+{
+	return balance;
+}
+
+Barn& Player::getBarn()
+{
+	return barn;
+}

@@ -7,7 +7,7 @@ class Player:public User
 private:
 	static unsigned nextId;
 	unsigned id;
-	int balance;
+	double balance;
 	int score;
 	Barn barn;
 	Farm farm;
@@ -16,5 +16,6 @@ public:
 	const std::string& profileInfo() override;
 	bool setBalance(int newBalance);
 	bool setScore(int newScore);
-	const Barn& getBarn() const;
+	double getBalance() const;
+	Barn& getBarn();
 };

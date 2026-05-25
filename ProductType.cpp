@@ -24,7 +24,7 @@ std::string toString(ProductType type)
 	}
 }
 
-const ProductType& fromInt(int value)
+ProductType fromInt(int value)
 {
 	switch (value)
 	{

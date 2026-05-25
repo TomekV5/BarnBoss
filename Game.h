@@ -18,7 +18,7 @@ private:
 	std::vector<std::unique_ptr<User>> users;
 
 	User* currentUser;
-
+	MarketManager marketManager;
 	Market* market;
 	TaskBoard* taskBoard;
 	ScoreBoard* scoreboard;
