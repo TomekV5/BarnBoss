@@ -16,4 +16,5 @@ enum class ProductType
 
 std::string toString(ProductType type);
 ProductType fromInt(int value);
+int toInt(ProductType type);
 // Fix: Forward declare Product before using it as a return type

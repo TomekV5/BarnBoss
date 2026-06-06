@@ -20,7 +20,7 @@ const unsigned& Task::getRequiredQuantity() const
 	return requiredQuantity;
 }
 
-const int& Task::getRewardBalance() const
+const double& Task::getRewardBalance() const
 {
 	return rewardBalance;
 }

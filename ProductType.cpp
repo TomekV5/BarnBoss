@@ -49,3 +49,28 @@ ProductType fromInt(int value)
 	}
 }
 
+int toInt(ProductType type)
+{
+	switch (type)
+	{
+	case ProductType::Wheat:
+		return 1;
+	case ProductType::Corn:
+		return 2;
+	case ProductType::Egg:
+		return 3;
+	case ProductType::Milk:
+		return 4;
+	case ProductType::Wheat_Seed:
+		return 5;
+	case ProductType::Corn_Seed:
+		return 6;
+	case ProductType::Chicken:
+		return 7;
+	case ProductType::Cow:
+		return 8;
+	default:
+		return 0;
+	}
+}
+

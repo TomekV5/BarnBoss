@@ -8,12 +8,23 @@ protected:
 	unsigned id;
 	ProductType name;
 	double price;
-	unsigned cycles;
+	unsigned requiredCycles;
+	unsigned currentCycles;
 	ProductType givenItem;
 	unsigned givenQuontity;
 public:
 	Product();
 	Product(ProductType name, double price, unsigned cycles, ProductType givenItem, unsigned givenQuontity);
-	const ProductType& getName() const;
+	ProductType getName() const;
+
+	virtual ~Product() = default;
+	void advanceCycle();
+
+	bool isReady() const;
+
+	unsigned getCurrentCycles() const;
+	unsigned getRequiredCycles() const;
+
+	ProductType getOutputProduct() const;
 };
 Product fromProductType(ProductType type);

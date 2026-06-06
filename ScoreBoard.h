@@ -1,22 +1,20 @@
 #pragma once
+#include <vector>
+#include <iostream>
+
+// Forward declaration – ScoreBoard only needs pointers/refs to Player
+class Player;
+
 class ScoreBoard
 {
 private:
-	ScoreBoard()=default;
-	//std::vector<std::unique_ptr<Task>> tasks;
+    ScoreBoard() = default;
 public:
-	ScoreBoard(const ScoreBoard&) = delete;
-	ScoreBoard operator=(const ScoreBoard&) = delete;
-	static ScoreBoard& getInstance();
+    ScoreBoard(const ScoreBoard&) = delete;
+    ScoreBoard& operator=(const ScoreBoard&) = delete;
 
-	/*void addTask(const Product& product, unsigned qty, double rewardBal, int rewardScore);
-	bool removeTask(int taskId);
+    static ScoreBoard& getInstance();
 
-	void showTasks() const;
-	Task* getTaskById(int taskId) const;
-
-	void saveToFile(std::ostream& out) const;
-	void loadFromFile(std::istream& in);*/
-
+    // Pass the full list of players; showScoreboard sorts a copy internally.
+    void showScoreboard(const std::vector<Player*>& players) const;
 };
-

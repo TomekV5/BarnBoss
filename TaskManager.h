@@ -1,16 +1,27 @@
 ﻿#pragma once
 #include "User.h"
-#include "Product.h"
-class TaskManager :public User
+
+class TaskManager : public User
 {
 private:
-	TaskManager() = default;
-public:
-	TaskManager(const TaskManager&) = delete;
-	TaskManager operator=(const TaskManager&) = delete;   // Singleton
-	static TaskManager& getInstance();
-	void showTasks(); /*-показва всички неизпълнени задачи на таблото със задачи*/
-	bool addTask(Product requiredProduct, int quantity, double rewardBalance, double rewardScore);/* -добавя нова задача към таблото със задачи*/
-	void removeTask(int taskId); /*-премахва задача от таблото със задачи*/
-};
+    TaskManager(const std::string& username, const std::string& password);
 
+public:
+    TaskManager(const TaskManager&) = delete;
+    TaskManager& operator=(const TaskManager&) = delete;
+
+    // The singleton is created on first registration; username/password are
+    // set at that point via setCredentials().
+    static TaskManager& getInstance();
+    static bool isRegistered();
+
+    // Called once when the TaskManager account is first registered.
+    void setCredentials(const std::string& username, const std::string& password);
+
+    std::string profileInfo() const override;
+
+    void showTasks() const;
+    bool addTask(const std::string& productName, unsigned quantity,
+        double rewardBalance, int rewardScore);
+    bool removeTask(unsigned taskId);
+};

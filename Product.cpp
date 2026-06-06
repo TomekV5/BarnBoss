@@ -2,18 +2,43 @@
 unsigned Product::nexId = 0;
 
 Product::Product()
-    : id(++nexId), name(ProductType::Undefined), price(0.0), cycles(0), givenItem(ProductType::Undefined), givenQuontity(0)
+    : id(++nexId), name(ProductType::Undefined), price(0.0), requiredCycles(0), givenItem(ProductType::Undefined), givenQuontity(0),currentCycles(0)
 {
 }
 
 Product::Product(ProductType name, double price, unsigned cycles, ProductType givenItem, unsigned givenQuontity)
-    : id(++nexId), name(name), price(price), cycles(cycles), givenItem(givenItem), givenQuontity(givenQuontity)
+	: id(++nexId), name(name), price(price), requiredCycles(cycles), givenItem(givenItem), givenQuontity(givenQuontity), currentCycles(0)
 {
 }
 
-const ProductType& Product::getName() const
+ProductType Product::getName() const
 {
 	return name;
+}
+
+void Product::advanceCycle()
+{
+	currentCycles++;
+}
+
+bool Product::isReady() const
+{
+	return currentCycles >= requiredCycles;
+}
+
+unsigned Product::getCurrentCycles() const
+{
+	return currentCycles;
+}
+
+unsigned Product::getRequiredCycles() const
+{
+	return requiredCycles;
+}
+
+ProductType Product::getOutputProduct() const
+{
+	return givenItem;
 }
 
 Product fromProductType(ProductType type)

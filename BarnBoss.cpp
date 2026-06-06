@@ -7,8 +7,10 @@
 
 int main()
 {
-	Market& market = Market::getInstance();
-	std::cout << "Current Market:\n" << market;
+	Game game;
+	game.run();
+	/*Market& market = Market::getInstance();
+	std::cout << "Current Market:\n" << market;*/
 	/*printWelcomeMessage();
 	Game game;
 	std::cout << "Load or start new game?\n";

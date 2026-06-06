@@ -1,16 +1,23 @@
 ﻿#pragma once
 #include "User.h"
-#include "Product.h"
-class MarketManager :public User
+
+class MarketManager : public User
 {
 private:
-	MarketManager(const std::string& username, const std::string& password);
-public:
-	MarketManager(const MarketManager&) = delete;
-	MarketManager operator=(const MarketManager&) = delete;   // Singleton
-	static MarketManager& getInstance();
-	void openMarketCatalog(); /*-показва целия каталог с продукти, тяхното количество и цена*/
-	bool restock(int productId, int quantity); /*-презарежда даден продукт с дадено количество*/
-	bool changePrice(int productId, double newPrice); /*-сменя цената на продукт*/
-};
+    MarketManager(const std::string& username, const std::string& password);
 
+public:
+    MarketManager(const MarketManager&) = delete;
+    MarketManager& operator=(const MarketManager&) = delete;
+
+    static MarketManager& getInstance();
+    static bool isRegistered();
+
+    void setCredentials(const std::string& username, const std::string& password);
+
+    std::string profileInfo() const override;
+
+    void openMarketCatalog() const;
+    bool restock(int productId, unsigned quantity);
+    bool changePrice(int productId, double newPrice);
+};

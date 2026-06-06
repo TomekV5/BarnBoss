@@ -1,31 +1,39 @@
-#pragma once
+﻿#pragma once
 #include "ProductType.h"
-#include "Player.h"
-#include "Product.h"
 #include <map>
-#include <stdexcept>
 #include <iostream>
+
+// Forward declaration to avoid circular include (Market <-> Player)
+class Player;
+
 class Market
 {
 private:
-	Market();
-	std::map<ProductType, std::pair<unsigned, double>> marketData;
+    Market();
+    // ProductType -> { quantity, price }
+    std::map<ProductType, std::pair<unsigned, double>> marketData;
+
 public:
-	Market(const Market&) = delete;
-	Market operator=(const Market&) = delete;
-	static Market& getInstance();
-	bool setQuantity(ProductType type, unsigned qty);
-	bool setPrice(ProductType type, double price);
-	bool buyProduct(ProductType type, unsigned qty, Player& player);
-	bool sellProduct(ProductType type, unsigned qty, Player& player);
+    Market(const Market&) = delete;
+    Market& operator=(const Market&) = delete;
 
-	/*void addTask(const Product& product, unsigned qty, double rewardBal, int rewardScore);
-	bool removeTask(int taskId);
+    static Market& getInstance();
 
-	void showTasks() const;
-	Task* getTaskById(int taskId) const;
+    // ── MarketManager operations ──────────────────────────────────────────
+    bool restock(ProductType type, unsigned qty);
+    bool changePrice(ProductType type, double newPrice);
 
-	void saveToFile(std::ostream& out) const;
-	void loadFromFile(std::istream& in);*/
-	friend std::ostream& operator<<(std::ostream& os, const Market& market);
+    // ── Player operations ─────────────────────────────────────────────────
+    bool buyProduct(ProductType type, unsigned qty, Player& player);
+    bool sellProduct(ProductType type, unsigned qty, Player& player);
+
+    // ── Display ───────────────────────────────────────────────────────────
+    void showCatalog() const;
+
+    // ── Save / load ───────────────────────────────────────────────────────
+    void saveToFile(std::ostream& out) const;
+    void loadFromFile(std::istream& in);
+
+    // kept for legacy streaming use
+    friend std::ostream& operator<<(std::ostream& os, const Market& m);
 };
