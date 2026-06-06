@@ -67,6 +67,10 @@ void Game::run()
     }
 }
 
+
+
+
+
 // ── Header ─────────────────────────────────────────────────────────────────
 void Game::printHeader() const
 {
@@ -94,35 +98,54 @@ void Game::processCommand(const std::string& line)
     if (args.empty()) return;
 
     const std::string& cmd = args[0];
+    std::unique_ptr<Command> cmdPtr = nullptr;
 
     // ── No user logged in ──────────────────────────────────────────────────
     if (!currentUser)
     {
-        if (cmd == "register") cmdRegister(args);
-        else if (cmd == "login")    cmdLogin(args);
+        if (cmd == "register") {
+			cmdPtr = std::make_unique<RegisterCommand>(*this, args);
+        }
+        else if (cmd == "login") {
+
+			cmdPtr = std::make_unique<LoginCommand>(*this, args);
+        }
         else if (cmd == "exit")
         {
-            save();
-            std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
-            running = false;
+			exit();
         }
+        if (cmdPtr)
+            cmdPtr->execute();
         else
-            std::cout << "Unknown command. Please login or register first." << std::endl;
+            std::cout << "Unknown command. Please login or register first.\n";
         return;
     }
 
     // ── Commands available to every logged-in user ─────────────────────────
-    if (cmd == "logout") { cmdLogout(); return; }
-    else if (cmd == "profileInfo") { cmdProfileInfo(); return; }
-    else if (cmd == "changePassword") { cmdChangePassword(args); return; }
+    if (cmd == "logout") 
+    { 
+		cmdPtr = std::make_unique<LogOutCommand>(*this);
+    }
+    else if (cmd == "profileInfo") { 
+		cmdPtr = std::make_unique<ProfileInfoCommand>(*this);
+    }
+    else if (cmd == "changePassword") {
+		cmdPtr = std::make_unique<ChangePasswordCommand>(currentUser, args);
+    }
     else if (cmd == "exit")
     {
-        save();
-        std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
-        running = false;
+		exit();
         return;
     }
 
+    if (cmdPtr) {
+        cmdPtr->execute();
+		return;
+    }
+    else
+    {
+		std::cout << "Unknown command." << std::endl;
+    }
     // ── Player commands ────────────────────────────────────────────────────
     if (currentPlayer())
     {
@@ -167,108 +190,95 @@ void Game::processCommand(const std::string& line)
             std::cout << "Unknown command." << std::endl;
         return;
     }
-
+   
     std::cout << "Unknown command." << std::endl;
+}
+
+void Game::exit()
+{
+    save();
+    std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
+    running = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  AUTH COMMANDS
 // ═══════════════════════════════════════════════════════════════════════════
-
-void Game::cmdRegister(const std::vector<std::string>& args)
+void Game::registerUser(const std::string& username, const std::string& password, const std::string& type)
 {
-    if (args.size() != 4)
-    {
-        std::cout << "Usage: register <username> <password> <type>" << std::endl;
-        return;
-    }
-    const std::string& uname = args[1];
-    const std::string& pwd = args[2];
-    const std::string& type = args[3];
-
-    if (pwd.size() < 3)
-    {
-        std::cout << "Password must be at least 3 characters." << std::endl;
-        return;
-    }
-
-    // Check username uniqueness across players and singletons
     for (const auto& p : players)
-        if (p->getUsername() == uname)
+    {
+        if (p->getUsername() == username)
         {
-            std::cout << "Username already taken." << std::endl;
+            std::cout << "Username already taken.\n";
             return;
         }
+    }
+
     if (MarketManager::isRegistered() &&
-        MarketManager::getInstance().getUsername() == uname)
+        MarketManager::getInstance().getUsername() == username)
     {
-        std::cout << "Username already taken." << std::endl;
+        std::cout << "Username already taken.\n";
         return;
     }
+
     if (TaskManager::isRegistered() &&
-        TaskManager::getInstance().getUsername() == uname)
+        TaskManager::getInstance().getUsername() == username)
     {
-        std::cout << "Username already taken." << std::endl;
+        std::cout << "Username already taken.\n";
         return;
     }
 
     if (type == "Player")
     {
-        players.push_back(std::make_unique<Player>(uname, pwd));
-        std::cout << "User registered successfully!" << std::endl;
+        players.push_back(std::make_unique<Player>(username, password));
     }
     else if (type == "MarketManager")
     {
         if (MarketManager::isRegistered())
         {
-            std::cout << "A MarketManager already exists." << std::endl;
+            std::cout << "A MarketManager already exists.\n";
             return;
         }
-        MarketManager::getInstance().setCredentials(uname, pwd);
-        std::cout << "User registered successfully!" << std::endl;
+
+        MarketManager::getInstance().setCredentials(username, password);
     }
     else if (type == "TaskManager")
     {
         if (TaskManager::isRegistered())
         {
-            std::cout << "A TaskManager already exists." << std::endl;
+            std::cout << "A TaskManager already exists.\n";
             return;
         }
-        TaskManager::getInstance().setCredentials(uname, pwd);
-        std::cout << "User registered successfully!" << std::endl;
+
+        TaskManager::getInstance().setCredentials(username, password);
     }
     else
     {
-        std::cout << "Unknown user type. Use: Player, MarketManager, TaskManager." << std::endl;
-    }
-}
-
-void Game::cmdLogin(const std::vector<std::string>& args)
-{
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: login <username> <password>" << std::endl;
+        std::cout << "Unknown user type.\n";
         return;
     }
-    const std::string& uname = args[1];
-    const std::string& pwd = args[2];
 
-    // Check players
+    std::cout << "User registered successfully!\n";
+}
+
+void Game::loginUser(const std::string& username, const std::string& password)
+{
     for (const auto& p : players)
     {
-        if (p->getUsername() == uname)
+        if (p->getUsername() == username)
         {
             // validate password via changePassword dry-run approach –
             // instead, expose a check method or compare directly.
             // We access password through a helper on User base.
             // Since password is protected, we add a validate helper on User.
-            if (!p->validatePassword(pwd))
+            if (!p->validatePassword(password))
             {
                 std::cout << "Incorrect password." << std::endl;
                 return;
             }
             currentUser = p.get();
-            std::cout << "Welcome, " << uname << "!" << std::endl;
+            std::cout << "Welcome, " << username << "!" << std::endl;
             return;
         }
     }
@@ -276,15 +286,15 @@ void Game::cmdLogin(const std::vector<std::string>& args)
     if (MarketManager::isRegistered())
     {
         auto& mm = MarketManager::getInstance();
-        if (mm.getUsername() == uname)
+        if (mm.getUsername() == username)
         {
-            if (!mm.validatePassword(pwd))
+            if (!mm.validatePassword(password))
             {
                 std::cout << "Incorrect password." << std::endl;
                 return;
             }
             currentUser = &mm;
-            std::cout << "Welcome, " << uname << "!" << std::endl;
+            std::cout << "Welcome, " << username << "!" << std::endl;
             return;
         }
     }
@@ -292,15 +302,15 @@ void Game::cmdLogin(const std::vector<std::string>& args)
     if (TaskManager::isRegistered())
     {
         auto& tm = TaskManager::getInstance();
-        if (tm.getUsername() == uname)
+        if (tm.getUsername() == username)
         {
-            if (!tm.validatePassword(pwd))
+            if (!tm.validatePassword(password))
             {
                 std::cout << "Incorrect password." << std::endl;
                 return;
             }
             currentUser = &tm;
-            std::cout << "Welcome, " << uname << "!" << std::endl;
+            std::cout << "Welcome, " << username << "!" << std::endl;
             return;
         }
     }
@@ -312,14 +322,14 @@ void Game::cmdLogin(const std::vector<std::string>& args)
 //  SHARED COMMANDS
 // ═══════════════════════════════════════════════════════════════════════════
 
-void Game::cmdLogout()
+void Game::logout()
 {
     std::cout << "Goodbye, " << currentUser->getUsername() << "!" << std::endl;
     currentUser = nullptr;
     printHeader();
 }
 
-void Game::cmdProfileInfo()
+void Game::profileInfo()
 {
     std::cout << currentUser->profileInfo() << std::endl;
 }

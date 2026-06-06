@@ -9,10 +9,16 @@
 #include "TaskBoard.h"
 #include "ScoreBoard.h"
 #include "Market.h"
+#include "LoginCommand.h"
+#include "RegisterCommand.h"
+#include "LogOutCommand.h"
+#include "ProfileInfoCommand.h"
+#include "ChangePasswordCommand.h"
 
 class Game
 {
 private:
+	
     // ── State ──────────────────────────────────────────────────────────────
     std::vector<std::unique_ptr<Player>> players; // all registered Players
     User* currentUser;
@@ -27,13 +33,18 @@ private:
     void printHeader() const;
     void processCommand(const std::string& line);
 
+    void exit();
+
+    
     // Unauthenticated commands
-    void cmdRegister(const std::vector<std::string>& args);
-    void cmdLogin(const std::vector<std::string>& args);
+    void registerUser(const std::string& username,
+        const std::string& password,
+        const std::string& type);
+    void loginUser(const std::string& username, const std::string& password);
+    void logout();
 
     // Commands available to all logged-in users
-    void cmdLogout();
-    void cmdProfileInfo();
+    void profileInfo();
     void cmdChangePassword(const std::vector<std::string>& args);
 
     // Player commands
@@ -80,6 +91,12 @@ private:
     std::vector<Player*> allPlayers() const;
 
 public:
+    friend class ProfileInfoCommand;
+	friend class LogOutCommand;
+	friend class LoginCommand;
+	friend class RegisterCommand;
+	friend class ChangePasswordCommand;
     Game();
     void run();
+   
 };
