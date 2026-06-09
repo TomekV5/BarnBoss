@@ -10,195 +10,266 @@ const char* Game::SAVE_FILE = "barnboss_save.txt";
 
 // ── Constructor ────────────────────────────────────────────────────────────
 Game::Game()
-    : currentUser(nullptr),
-    running(false),
-    market(Market::getInstance()),
-    taskBoard(TaskBoard::getInstance()),
-    scoreboard(ScoreBoard::getInstance())
+	: currentUser(nullptr),
+	running(false),
+	market(Market::getInstance()),
+	taskBoard(TaskBoard::getInstance()),
+	scoreboard(ScoreBoard::getInstance())
 {
-    // Seed the two default tasks from the spec
-    taskBoard.addTask(Product(ProductType::Wheat, 0, 0, ProductType::Undefined, 0), 5, 50.0, 10);
-    taskBoard.addTask(Product(ProductType::Milk, 0, 0, ProductType::Undefined, 0), 3, 120.0, 20);
+	// Seed the two default tasks from the spec
+	taskBoard.addTask(Product(ProductType::Wheat, 0, 0, ProductType::Undefined, 0), 5, 50.0, 10);
+	taskBoard.addTask(Product(ProductType::Milk, 0, 0, ProductType::Undefined, 0), 3, 120.0, 20);
 }
 
 // ── Entry point ────────────────────────────────────────────────────────────
 void Game::run()
 {
-    load(); // attempt to restore saved state
-    running = true;
-    printHeader();
+	load(); // attempt to restore saved state
+	running = true;
+	printHeader();
 
-    std::string line;
-    if (!currentUser) {
-        showHelpNotLoggedIn();
-    }
-    else if (currentPlayer())
-    {
-        showHelpPlayer();
-    }
-    else if (currentTaskManager())
-    {
-        showHelpTaskManager();
-    }
-    else if (currentMarketManager())
-    {
-        showHelpMarketManager();
-    }
-    while (running && std::getline(std::cin, line))
-    {
-        if (line.empty()) continue;
-        std::cout << "> ";
-        processCommand(line);
-        if (!currentUser) {
-            showHelpNotLoggedIn();
-        }
-        else if (currentPlayer())
-        {
-            showHelpPlayer();
-        }
-        else if (currentTaskManager())
-        {
-            showHelpTaskManager();
-        }
-        else if (currentMarketManager())
-        {
-            showHelpMarketManager();
-        }
-    }
+	std::string line;
+	if (!currentUser) {
+		showHelpNotLoggedIn();
+	}
+	else if (currentPlayer())
+	{
+		showHelpPlayer();
+	}
+	else if (currentTaskManager())
+	{
+		showHelpTaskManager();
+	}
+	else if (currentMarketManager())
+	{
+		showHelpMarketManager();
+	}
+	while (running && std::getline(std::cin, line))
+	{
+		if (line.empty()) continue;
+		std::cout << "> ";
+		processCommand(line);
+		if (!currentUser) {
+			showHelpNotLoggedIn();
+		}
+		else if (currentPlayer())
+		{
+			showHelpPlayer();
+		}
+		else if (currentTaskManager())
+		{
+			showHelpTaskManager();
+		}
+		else if (currentMarketManager())
+		{
+			showHelpMarketManager();
+		}
+	}
 }
-
-
-
-
 
 // ── Header ─────────────────────────────────────────────────────────────────
 void Game::printHeader() const
 {
-    std::cout << "========================================\n";
-    std::cout << "            BARN BOSS\n";
-    std::cout << "========================================\n";
-    std::cout << "> ";
-    std::cout.flush();
+	std::cout << "========================================\n";
+	std::cout << "            BARN BOSS\n";
+	std::cout << "========================================\n";
+	std::cout << "> ";
+	std::cout.flush();
 }
 
 // ── Tokeniser helper ───────────────────────────────────────────────────────
 static std::vector<std::string> tokenise(const std::string& line)
 {
-    std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    std::string tok;
-    while (iss >> tok) tokens.push_back(tok);
-    return tokens;
+	std::vector<std::string> tokens;
+	std::istringstream iss(line);
+	std::string tok;
+	while (iss >> tok) tokens.push_back(tok);
+	return tokens;
 }
 
 // ── Command dispatcher ─────────────────────────────────────────────────────
 void Game::processCommand(const std::string& line)
 {
-    auto args = tokenise(line);
-    if (args.empty()) return;
+	auto args = tokenise(line);
+	if (args.empty()) return;
 
-    const std::string& cmd = args[0];
-    std::unique_ptr<Command> cmdPtr = nullptr;
+	const std::string& cmd = args[0];
+	std::unique_ptr<Command> cmdPtr = nullptr;
 
-    // ── No user logged in ──────────────────────────────────────────────────
-    if (!currentUser)
-    {
-        if (cmd == "register") {
-			cmdPtr = std::make_unique<RegisterCommand>(*this, args);
-        }
-        else if (cmd == "login") {
+	// ── No user logged in ──────────────────────────────────────────────────
+	if (!currentUser)
+	{
+		try {
+			if (cmd == "register") {
+				cmdPtr = std::make_unique<RegisterCommand>(*this, args);
+			}
+			else if (cmd == "login") {
 
-			cmdPtr = std::make_unique<LoginCommand>(*this, args);
-        }
-        else if (cmd == "exit")
-        {
-			exit();
-        }
-        if (cmdPtr)
-            cmdPtr->execute();
-        else
-            std::cout << "Unknown command. Please login or register first.\n";
-        return;
-    }
-
-    // ── Commands available to every logged-in user ─────────────────────────
-    if (cmd == "logout") 
-    { 
-		cmdPtr = std::make_unique<LogOutCommand>(*this);
-    }
-    else if (cmd == "profileInfo") { 
-		cmdPtr = std::make_unique<ProfileInfoCommand>(*this);
-    }
-    else if (cmd == "changePassword") {
-		cmdPtr = std::make_unique<ChangePasswordCommand>(currentUser, args);
-    }
-    else if (cmd == "exit")
-    {
-		exit();
-        return;
-    }
-
-    if (cmdPtr) {
-        cmdPtr->execute();
+				cmdPtr = std::make_unique<LoginCommand>(*this, args);
+			}
+			else if (cmd == "exit")
+			{
+				exit();
+			}
+			if (cmdPtr)
+				cmdPtr->execute();
+			else
+				std::cout << "Unknown command. Please login or register first.\n";
+		}
+		catch (const std::invalid_argument& e) {
+			std::cout << e.what() << std::endl;
+		}
 		return;
-    }
-    else
-    {
-		std::cout << "Unknown command." << std::endl;
-    }
-    // ── Player commands ────────────────────────────────────────────────────
-    if (currentPlayer())
-    {
-        if (cmd == "checkBalance") cmdCheckBalance();
-        else if (cmd == "checkScore") cmdCheckScore();
-        else if (cmd == "checkBarn") cmdCheckBarn();
-        else if (cmd == "checkFarm") cmdCheckFarm();
-        else if (cmd == "expandCropland") cmdExpandCropland();
-        else if (cmd == "expandFarmland") cmdExpandFarmland();
-        else if (cmd == "sowPlant") cmdSowPlant(args);
-        else if (cmd == "addAnimal") cmdAddAnimal(args);
-        else if (cmd == "harvest") cmdHarvest();
-        else if (cmd == "openMarketCatalog") cmdOpenMarket();
-        else if (cmd == "buyItem") cmdBuyItem(args);
-        else if (cmd == "sellItem") cmdSellItem(args);
-        else if (cmd == "showTaskBoard") cmdShowTaskBoard();
-        else if (cmd == "completeTask") cmdCompleteTask(args);
-        else if (cmd == "showScoreboard") cmdShowScoreboard();
-        else
-            std::cout << "Unknown command." << std::endl;
-        return;
-    }
+	}
 
-    // ── TaskManager commands ───────────────────────────────────────────────
-    if (currentTaskManager())
-    {
-        if (cmd == "showTasks")  cmdShowTasks();
-        else if (cmd == "addTask")    cmdAddTask(args);
-        else if (cmd == "removeTask") cmdRemoveTask(args);
-        else
-            std::cout << "Unknown command." << std::endl;
-        return;
-    }
+	// ── Commands available to every logged-in user ─────────────────────────
+	try {
+		if (cmd == "logout")
+		{
+			cmdPtr = std::make_unique<LogOutCommand>(*this);
+		}
+		else if (cmd == "profileInfo") {
+			cmdPtr = std::make_unique<ProfileInfoCommand>(currentUser);
+		}
+		else if (cmd == "changePassword") {
+			cmdPtr = std::make_unique<ChangePasswordCommand>(currentUser, args);
+		}
+		else if (cmd == "exit")
+		{
+			exit();
+			return;
+		}
+		if (cmdPtr) {
+			cmdPtr->execute();
+			return;
+		}
+		else
+		{
+			std::cout << "Unknown command." << std::endl;
+		}
+	}
+	catch (const std::invalid_argument& e) {
+		std::cout << e.what() << std::endl;
+	}
 
-    // ── MarketManager commands ─────────────────────────────────────────────
-    if (currentMarketManager())
-    {
-        if (cmd == "openMarketCatalog") cmdOpenMarket();
-        else if (cmd == "restock")           cmdRestock(args);
-        else if (cmd == "changePrice")       cmdChangePrice(args);
-        else
-            std::cout << "Unknown command." << std::endl;
-        return;
-    }
-   
-    std::cout << "Unknown command." << std::endl;
+
+	// ── Player commands ────────────────────────────────────────────────────
+	if (currentPlayer())
+	{
+		try {
+			if (cmd == "checkBalance") {
+				cmdPtr = std::make_unique<CheckBalanceCommand>(currentPlayer());
+			}
+			else if (cmd == "checkScore") {
+				cmdPtr = std::make_unique<CheckScoreCommand>(currentPlayer());
+			}
+			else if (cmd == "checkBarn") {
+				cmdPtr = std::make_unique<CheckBarnCommand>(currentPlayer());
+			}
+			else if (cmd == "checkFarm") {
+				cmdPtr = std::make_unique<CheckFarmCommand>(currentPlayer());
+			}
+			else if (cmd == "expandCropland") {
+				cmdPtr = std::make_unique<ExpandCroplandCommand>(currentPlayer());
+			}
+			else if (cmd == "expandFarmland") {
+				cmdPtr = std::make_unique<ExpandFarmlandCommand>(currentPlayer());
+			}
+			else if (cmd == "sowPlant") {
+				cmdPtr = std::make_unique<SowPlantCommand>(currentPlayer(), args);
+			}
+			else if (cmd == "addAnimal") {
+				cmdPtr = std::make_unique<AddAnimalCommand>(currentPlayer(), args);
+			}
+			else if (cmd == "harvest") {
+				cmdPtr = std::make_unique<HarvestCommand>(currentPlayer());
+			}
+			else if (cmd == "openMarketCatalog") {
+				cmdPtr = std::make_unique<OpenMarketCommand>(market);
+			}
+			else if (cmd == "buyItem") {
+				cmdPtr = std::make_unique<BuyItemCommand>(currentPlayer(), market, args);
+			}
+			else if (cmd == "sellItem") {
+				cmdPtr = std::make_unique<SellItemCommand>(currentPlayer(), market, args);
+			}
+			else if (cmd == "showTaskBoard") {
+				cmdPtr = std::make_unique<ShowTaskBoardCommand>(taskBoard);
+			}
+			else if (cmd == "completeTask") {
+				cmdPtr = std::make_unique<CompleteTaskCommand>(currentPlayer(), taskBoard, args);
+			}
+			else if (cmd == "showScoreboard") {
+				cmdPtr = std::make_unique<ShowScoreboardCommand>(scoreboard, allPlayers());
+			}
+			if (cmdPtr)
+			{
+				cmdPtr->execute();
+			}
+			else {
+				std::cout << "Unknown command." << std::endl;
+			}
+		}
+		catch (const std::invalid_argument& e) {
+			std::cout << e.what() << std::endl;
+		}
+		return;
+	}
+
+	// ── TaskManager commands ───────────────────────────────────────────────
+	if (currentTaskManager())
+	{
+		try {
+			if (cmd == "showTasks")
+			{
+				cmdPtr = std::make_unique<ShowTaskBoardCommand>(taskBoard);
+			}
+			else if (cmd == "addTask")    cmdAddTask(args);
+			else if (cmd == "removeTask") cmdRemoveTask(args);
+			if (cmdPtr) {
+				cmdPtr->execute();
+			}
+			else {
+
+				std::cout << "Unknown command." << std::endl;
+			}
+		}
+		catch (const std::invalid_argument& e) {
+			std::cout << e.what() << std::endl;
+			return;
+		}
+	}
+
+	// ── MarketManager commands ─────────────────────────────────────────────
+	if (currentMarketManager())
+	{
+		try {
+			if (cmd == "openMarketCatalog") {
+				cmdPtr = std::make_unique<OpenMarketCommand>(market);
+			}
+			else if (cmd == "restock")           cmdRestock(args);
+			else if (cmd == "changePrice")       cmdChangePrice(args);
+			if (cmdPtr) {
+				cmdPtr->execute();
+			}
+			else {
+				std::cout << "Unknown command." << std::endl;
+			}
+			return;
+		}
+		catch (const std::invalid_argument& e) {
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+	std::cout << "Unknown command." << std::endl;
 }
 
 void Game::exit()
 {
-    save();
-    std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
-    running = false;
+	save();
+	std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
+	running = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -206,116 +277,116 @@ void Game::exit()
 // ═══════════════════════════════════════════════════════════════════════════
 void Game::registerUser(const std::string& username, const std::string& password, const std::string& type)
 {
-    for (const auto& p : players)
-    {
-        if (p->getUsername() == username)
-        {
-            std::cout << "Username already taken.\n";
-            return;
-        }
-    }
+	for (const auto& p : players)
+	{
+		if (p->getUsername() == username)
+		{
+			std::cout << "Username already taken.\n";
+			return;
+		}
+	}
 
-    if (MarketManager::isRegistered() &&
-        MarketManager::getInstance().getUsername() == username)
-    {
-        std::cout << "Username already taken.\n";
-        return;
-    }
+	if (MarketManager::isRegistered() &&
+		MarketManager::getInstance().getUsername() == username)
+	{
+		std::cout << "Username already taken.\n";
+		return;
+	}
 
-    if (TaskManager::isRegistered() &&
-        TaskManager::getInstance().getUsername() == username)
-    {
-        std::cout << "Username already taken.\n";
-        return;
-    }
+	if (TaskManager::isRegistered() &&
+		TaskManager::getInstance().getUsername() == username)
+	{
+		std::cout << "Username already taken.\n";
+		return;
+	}
 
-    if (type == "Player")
-    {
-        players.push_back(std::make_unique<Player>(username, password));
-    }
-    else if (type == "MarketManager")
-    {
-        if (MarketManager::isRegistered())
-        {
-            std::cout << "A MarketManager already exists.\n";
-            return;
-        }
+	if (type == "Player")
+	{
+		players.push_back(std::make_unique<Player>(username, password));
+	}
+	else if (type == "MarketManager")
+	{
+		if (MarketManager::isRegistered())
+		{
+			std::cout << "A MarketManager already exists.\n";
+			return;
+		}
 
-        MarketManager::getInstance().setCredentials(username, password);
-    }
-    else if (type == "TaskManager")
-    {
-        if (TaskManager::isRegistered())
-        {
-            std::cout << "A TaskManager already exists.\n";
-            return;
-        }
+		MarketManager::getInstance().setCredentials(username, password);
+	}
+	else if (type == "TaskManager")
+	{
+		if (TaskManager::isRegistered())
+		{
+			std::cout << "A TaskManager already exists.\n";
+			return;
+		}
 
-        TaskManager::getInstance().setCredentials(username, password);
-    }
-    else
-    {
-        std::cout << "Unknown user type.\n";
-        return;
-    }
+		TaskManager::getInstance().setCredentials(username, password);
+	}
+	else
+	{
+		std::cout << "Unknown user type.\n";
+		return;
+	}
 
-    std::cout << "User registered successfully!\n";
+	std::cout << "User registered successfully!\n";
 }
 
 void Game::loginUser(const std::string& username, const std::string& password)
 {
-    for (const auto& p : players)
-    {
-        if (p->getUsername() == username)
-        {
-            // validate password via changePassword dry-run approach –
-            // instead, expose a check method or compare directly.
-            // We access password through a helper on User base.
-            // Since password is protected, we add a validate helper on User.
-            if (!p->validatePassword(password))
-            {
-                std::cout << "Incorrect password." << std::endl;
-                return;
-            }
-            currentUser = p.get();
-            std::cout << "Welcome, " << username << "!" << std::endl;
-            return;
-        }
-    }
-    // Check MarketManager
-    if (MarketManager::isRegistered())
-    {
-        auto& mm = MarketManager::getInstance();
-        if (mm.getUsername() == username)
-        {
-            if (!mm.validatePassword(password))
-            {
-                std::cout << "Incorrect password." << std::endl;
-                return;
-            }
-            currentUser = &mm;
-            std::cout << "Welcome, " << username << "!" << std::endl;
-            return;
-        }
-    }
-    // Check TaskManager
-    if (TaskManager::isRegistered())
-    {
-        auto& tm = TaskManager::getInstance();
-        if (tm.getUsername() == username)
-        {
-            if (!tm.validatePassword(password))
-            {
-                std::cout << "Incorrect password." << std::endl;
-                return;
-            }
-            currentUser = &tm;
-            std::cout << "Welcome, " << username << "!" << std::endl;
-            return;
-        }
-    }
+	for (const auto& p : players)
+	{
+		if (p->getUsername() == username)
+		{
+			// validate password via changePassword dry-run approach –
+			// instead, expose a check method or compare directly.
+			// We access password through a helper on User base.
+			// Since password is protected, we add a validate helper on User.
+			if (!p->validatePassword(password))
+			{
+				std::cout << "Incorrect password." << std::endl;
+				return;
+			}
+			currentUser = p.get();
+			std::cout << "Welcome, " << username << "!" << std::endl;
+			return;
+		}
+	}
+	// Check MarketManager
+	if (MarketManager::isRegistered())
+	{
+		auto& mm = MarketManager::getInstance();
+		if (mm.getUsername() == username)
+		{
+			if (!mm.validatePassword(password))
+			{
+				std::cout << "Incorrect password." << std::endl;
+				return;
+			}
+			currentUser = &mm;
+			std::cout << "Welcome, " << username << "!" << std::endl;
+			return;
+		}
+	}
+	// Check TaskManager
+	if (TaskManager::isRegistered())
+	{
+		auto& tm = TaskManager::getInstance();
+		if (tm.getUsername() == username)
+		{
+			if (!tm.validatePassword(password))
+			{
+				std::cout << "Incorrect password." << std::endl;
+				return;
+			}
+			currentUser = &tm;
+			std::cout << "Welcome, " << username << "!" << std::endl;
+			return;
+		}
+	}
 
-    std::cout << "User not found." << std::endl;
+	std::cout << "User not found." << std::endl;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -324,256 +395,32 @@ void Game::loginUser(const std::string& username, const std::string& password)
 
 void Game::logout()
 {
-    std::cout << "Goodbye, " << currentUser->getUsername() << "!" << std::endl;
-    currentUser = nullptr;
-    printHeader();
-}
-
-void Game::profileInfo()
-{
-    std::cout << currentUser->profileInfo() << std::endl;
+	std::cout << "Goodbye, " << currentUser->getUsername() << "!" << std::endl;
+	currentUser = nullptr;
+	printHeader();
 }
 
 void Game::cmdChangePassword(const std::vector<std::string>& args)
 {
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: changePassword <oldPassword> <newPassword>" << std::endl;
-        return;
-    }
-    if (args[2].size() < 3)
-    {
-        std::cout << "New password must be at least 3 characters." << std::endl;
-        return;
-    }
-    if (currentUser->changePassword(args[1], args[2]))
-        std::cout << "Password changed successfully." << std::endl;
-    else
-        std::cout << "Incorrect old password." << std::endl;
+	if (args.size() != 3)
+	{
+		std::cout << "Usage: changePassword <oldPassword> <newPassword>" << std::endl;
+		return;
+	}
+	if (args[2].size() < 3)
+	{
+		std::cout << "New password must be at least 3 characters." << std::endl;
+		return;
+	}
+	if (currentUser->changePassword(args[1], args[2]))
+		std::cout << "Password changed successfully." << std::endl;
+	else
+		std::cout << "Incorrect old password." << std::endl;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  PLAYER COMMANDS
 // ═══════════════════════════════════════════════════════════════════════════
-
-void Game::cmdCheckBalance()
-{
-    Player* p = currentPlayer();
-    std::cout << "Current Balance: " << std::fixed << std::setprecision(2)
-        << p->getBalance() << std::endl;
-}
-
-void Game::cmdCheckScore()
-{
-    std::cout << "Current Score: " << currentPlayer()->getScore() << std::endl;
-}
-
-void Game::cmdCheckBarn()
-{
-    currentPlayer()->getBarn().display();
-}
-
-void Game::cmdCheckFarm()
-{
-    currentPlayer()->getFarm().display();
-}
-
-void Game::cmdExpandCropland()
-{
-    Player* p = currentPlayer();
-    size_t  cap = p->getFarm().getCroplandCapacity();
-    int requiredScore = static_cast<int>(cap * 10);
-    double cost = 50.0 * cap;
-
-    if (p->getScore() < requiredScore)
-    {
-        std::cout << "Not enough Score. Need " << requiredScore
-            << ", have " << p->getScore() << "." << std::endl;
-        return;
-    }
-    if (p->getBalance() < cost)
-    {
-        std::cout << "Not enough Balance. Need " << cost
-            << ", have " << p->getBalance() << "." << std::endl;
-        return;
-    }
-
-    p->addBalance(-cost);
-    p->getFarm().expandCropland();
-    std::cout << "Cropland expanded! New capacity: "
-        << p->getFarm().getCroplandCapacity() << std::endl;
-}
-
-void Game::cmdExpandFarmland()
-{
-    Player* p = currentPlayer();
-    size_t  cap = p->getFarm().getFarmlandCapacity();
-    int requiredScore = static_cast<int>(cap * 10);
-    double cost = 50.0 * cap;
-
-    if (p->getScore() < requiredScore)
-    {
-        std::cout << "Not enough Score. Need " << requiredScore
-            << ", have " << p->getScore() << "." << std::endl;
-        return;
-    }
-    if (p->getBalance() < cost)
-    {
-        std::cout << "Not enough Balance. Need " << cost
-            << ", have " << p->getBalance() << "." << std::endl;
-        return;
-    }
-
-    p->addBalance(-cost);
-    p->getFarm().expandFarmland();
-    std::cout << "Farmland expanded! New capacity: "
-        << p->getFarm().getFarmlandCapacity() << std::endl;
-}
-
-void Game::cmdSowPlant(const std::vector<std::string>& args)
-{
-    if (args.size() != 2)
-    {
-        std::cout << "Usage: sowPlant <seedId>" << std::endl;
-        return;
-    }
-    int seedId = std::stoi(args[1]);
-    ProductType type = fromInt(seedId);
-    if (type != ProductType::Wheat_Seed && type != ProductType::Corn_Seed)
-    {
-        std::cout << "Invalid seed id. Use 1 (Wheat Seed) or 2 (Corn Seed)." << std::endl;
-        return;
-    }
-    Player* p = currentPlayer();
-    if (p->getFarm().sowPlant(type, p->getBarn()))
-        std::cout << "Plants planted successfully!" << std::endl;
-    // error message already printed by Farm::sowPlant
-}
-
-void Game::cmdAddAnimal(const std::vector<std::string>& args)
-{
-    if (args.size() != 2)
-    {
-        std::cout << "Usage: addAnimal <animalId>" << std::endl;
-        return;
-    }
-    int animalId = std::stoi(args[1]);
-    ProductType type = fromInt(animalId);
-    if (type != ProductType::Chicken && type != ProductType::Cow)
-    {
-        std::cout << "Invalid animal id. Use 3 (Chicken) or 4 (Cow)." << std::endl;
-        return;
-    }
-    Player* p = currentPlayer();
-    if (p->getFarm().addAnimal(type, p->getBarn()))
-        std::cout << "Animals added successfully!" << std::endl;
-}
-
-void Game::cmdHarvest()
-{
-    Player* p = currentPlayer();
-    int     got = p->getFarm().harvest(p->getBarn());
-    std::cout << "Harvest completed!" << std::endl;
-    if (got > 0)
-        std::cout << "Collected " << got << " item(s)." << std::endl;
-}
-
-void Game::cmdOpenMarket()
-{
-    market.showCatalog();
-}
-
-void Game::cmdBuyItem(const std::vector<std::string>& args)
-{
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: buyItem <productId> <quantity>" << std::endl;
-        return;
-    }
-    int productId = std::stoi(args[1]);
-    unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
-    ProductType type = fromInt(productId);
-
-    if (type == ProductType::Undefined)
-    {
-        std::cout << "Invalid product id." << std::endl;
-        return;
-    }
-    Player* p = currentPlayer();
-    if (market.buyProduct(type, qty, *p))
-        std::cout << "The purchase was successful!" << std::endl;
-    else
-        std::cout << "Purchase failed. Check product availability or your balance." << std::endl;
-}
-
-void Game::cmdSellItem(const std::vector<std::string>& args)
-{
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: sellItem <productId> <quantity>" << std::endl;
-        return;
-    }
-    int productId = std::stoi(args[1]);
-    unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
-    ProductType type = fromInt(productId);
-
-    if (type == ProductType::Undefined)
-    {
-        std::cout << "Invalid product id." << std::endl;
-        return;
-    }
-    Player* p = currentPlayer();
-    if (market.sellProduct(type, qty, *p))
-        std::cout << "The sale was successful!" << std::endl;
-    else
-        std::cout << "Sale failed. Check your barn inventory." << std::endl;
-}
-
-void Game::cmdShowTaskBoard()
-{
-    taskBoard.showTasks();
-}
-
-void Game::cmdCompleteTask(const std::vector<std::string>& args)
-{
-    if (args.size() != 2)
-    {
-        std::cout << "Usage: completeTask <taskId>" << std::endl;
-        return;
-    }
-    int     taskId = std::stoi(args[1]);
-    Player* p = currentPlayer();
-
-    Task* task = taskBoard.getTaskById(taskId);
-    if (!task)
-    {
-        std::cout << "Task not found." << std::endl;
-        return;
-    }
-
-    ProductType required = task->getRequiredProduct().getName();
-    unsigned    qty = task->getRequiredQuantity();
-
-    if (!p->getBarn().hasProduct(required, qty))
-    {
-        std::cout << "Not enough " << toString(required) << " in barn. Need "
-            << qty << "." << std::endl;
-        return;
-    }
-
-    p->getBarn().removeProduct(required, qty);
-    p->addBalance(task->getRewardBalance());
-    p->addScore(task->getRewardScore());
-    taskBoard.removeTask(taskId);
-
-    std::cout << "Task completed! Reward: +" << task->getRewardBalance()
-        << " Balance, +" << task->getRewardScore() << " Score." << std::endl;
-}
-
-void Game::cmdShowScoreboard()
-{
-    scoreboard.showScoreboard(allPlayers());
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  TASKMANAGER COMMANDS
@@ -581,37 +428,37 @@ void Game::cmdShowScoreboard()
 
 void Game::cmdShowTasks()
 {
-    taskBoard.showTasks();
+	taskBoard.showTasks();
 }
 
 void Game::cmdAddTask(const std::vector<std::string>& args)
 {
-    // addTask <product> <quantity> <rewardBalance> <rewardScore>
-    if (args.size() != 5)
-    {
-        std::cout << "Usage: addTask <product> <quantity> <rewardBalance> <rewardScore>" << std::endl;
-        return;
-    }
-    unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
-    double rewardBalance = std::stod(args[3]);
-    int rewardScore = std::stoi(args[4]);
+	// addTask <product> <quantity> <rewardBalance> <rewardScore>
+	if (args.size() != 5)
+	{
+		std::cout << "Usage: addTask <product> <quantity> <rewardBalance> <rewardScore>" << std::endl;
+		return;
+	}
+	unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
+	double rewardBalance = std::stod(args[3]);
+	int rewardScore = std::stoi(args[4]);
 
-    if (currentTaskManager()->addTask(args[1], qty, rewardBalance, rewardScore))
-        std::cout << "Task added successfully!" << std::endl;
+	if (currentTaskManager()->addTask(args[1], qty, rewardBalance, rewardScore))
+		std::cout << "Task added successfully!" << std::endl;
 }
 
 void Game::cmdRemoveTask(const std::vector<std::string>& args)
 {
-    if (args.size() != 2)
-    {
-        std::cout << "Usage: removeTask <taskId>" << std::endl;
-        return;
-    }
-    unsigned taskId = static_cast<unsigned>(std::stoi(args[1]));
-    if (currentTaskManager()->removeTask(taskId))
-        std::cout << "Task removed successfully." << std::endl;
-    else
-        std::cout << "Task not found." << std::endl;
+	if (args.size() != 2)
+	{
+		std::cout << "Usage: removeTask <taskId>" << std::endl;
+		return;
+	}
+	unsigned taskId = static_cast<unsigned>(std::stoi(args[1]));
+	if (currentTaskManager()->removeTask(taskId))
+		std::cout << "Task removed successfully." << std::endl;
+	else
+		std::cout << "Task not found." << std::endl;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -620,34 +467,34 @@ void Game::cmdRemoveTask(const std::vector<std::string>& args)
 
 void Game::cmdRestock(const std::vector<std::string>& args)
 {
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: restock <productId> <quantity>" << std::endl;
-        return;
-    }
-    int productId = std::stoi(args[1]);
-    unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
+	if (args.size() != 3)
+	{
+		std::cout << "Usage: restock <productId> <quantity>" << std::endl;
+		return;
+	}
+	int productId = std::stoi(args[1]);
+	unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
 
-    if (currentMarketManager()->restock(productId, qty))
-        std::cout << "Restocked successfully." << std::endl;
-    else
-        std::cout << "Restock failed." << std::endl;
+	if (currentMarketManager()->restock(productId, qty))
+		std::cout << "Restocked successfully." << std::endl;
+	else
+		std::cout << "Restock failed." << std::endl;
 }
 
 void Game::cmdChangePrice(const std::vector<std::string>& args)
 {
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: changePrice <productId> <newPrice>" << std::endl;
-        return;
-    }
-    int    productId = std::stoi(args[1]);
-    double newPrice = std::stod(args[2]);
+	if (args.size() != 3)
+	{
+		std::cout << "Usage: changePrice <productId> <newPrice>" << std::endl;
+		return;
+	}
+	int    productId = std::stoi(args[1]);
+	double newPrice = std::stod(args[2]);
 
-    if (currentMarketManager()->changePrice(productId, newPrice))
-        std::cout << "Price updated successfully." << std::endl;
-    else
-        std::cout << "Price change failed." << std::endl;
+	if (currentMarketManager()->changePrice(productId, newPrice))
+		std::cout << "Price updated successfully." << std::endl;
+	else
+		std::cout << "Price change failed." << std::endl;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -656,25 +503,25 @@ void Game::cmdChangePrice(const std::vector<std::string>& args)
 
 Player* Game::currentPlayer() const
 {
-    return dynamic_cast<Player*>(currentUser);
+	return dynamic_cast<Player*>(currentUser);
 }
 
 TaskManager* Game::currentTaskManager() const
 {
-    return dynamic_cast<TaskManager*>(currentUser);
+	return dynamic_cast<TaskManager*>(currentUser);
 }
 
 MarketManager* Game::currentMarketManager() const
 {
-    return dynamic_cast<MarketManager*>(currentUser);
+	return dynamic_cast<MarketManager*>(currentUser);
 }
 
 std::vector<Player*> Game::allPlayers() const
 {
-    std::vector<Player*> result;
-    for (const auto& p : players)
-        result.push_back(p.get());
-    return result;
+	std::vector<Player*> result;
+	for (const auto& p : players)
+		result.push_back(p.get());
+	return result;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -683,147 +530,147 @@ std::vector<Player*> Game::allPlayers() const
 
 void Game::save()
 {
-    std::ofstream out(SAVE_FILE);
-    if (!out)
-    {
-        std::cout << "Warning: could not open save file." << std::endl;
-        return;
-    }
+	std::ofstream out(SAVE_FILE);
+	if (!out)
+	{
+		std::cout << "Warning: could not open save file." << std::endl;
+		return;
+	}
 
-    // Players
-    out << players.size() << "\n";
-    for (const auto& p : players)
-        p->saveToFile(out);
+	// Players
+	out << players.size() << "\n";
+	for (const auto& p : players)
+		p->saveToFile(out);
 
-    // MarketManager
-    out << (MarketManager::isRegistered() ? 1 : 0) << "\n";
-    if (MarketManager::isRegistered())
-    {
-        auto& mm = MarketManager::getInstance();
-        out << mm.getUsername() << " " << mm.getPasswordRaw() << "\n";
-    }
+	// MarketManager
+	out << (MarketManager::isRegistered() ? 1 : 0) << "\n";
+	if (MarketManager::isRegistered())
+	{
+		auto& mm = MarketManager::getInstance();
+		out << mm.getUsername() << " " << mm.getPasswordRaw() << "\n";
+	}
 
-    // TaskManager
-    out << (TaskManager::isRegistered() ? 1 : 0) << "\n";
-    if (TaskManager::isRegistered())
-    {
-        auto& tm = TaskManager::getInstance();
-        out << tm.getUsername() << " " << tm.getPasswordRaw() << "\n";
-    }
+	// TaskManager
+	out << (TaskManager::isRegistered() ? 1 : 0) << "\n";
+	if (TaskManager::isRegistered())
+	{
+		auto& tm = TaskManager::getInstance();
+		out << tm.getUsername() << " " << tm.getPasswordRaw() << "\n";
+	}
 
-    // Market state
-    market.saveToFile(out);
+	// Market state
+	market.saveToFile(out);
 
-    // TaskBoard state
-    taskBoard.saveToFile(out);
+	// TaskBoard state
+	taskBoard.saveToFile(out);
 }
 
 void Game::load()
 {
-    std::ifstream in(SAVE_FILE);
-    if (!in)
-    {
-        // No save file – start fresh with default task board already seeded
-        // in the constructor.
-        return;
-    }
+	std::ifstream in(SAVE_FILE);
+	if (!in)
+	{
+		// No save file – start fresh with default task board already seeded
+		// in the constructor.
+		return;
+	}
 
-    // Clear default tasks (they were seeded in constructor; save file has them)
-    // We reload the full task board from file instead.
-    // Players
-    players.clear();
-    size_t playerCount;
-    in >> playerCount;
-    in.ignore();
+	// Clear default tasks (they were seeded in constructor; save file has them)
+	// We reload the full task board from file instead.
+	// Players
+	players.clear();
+	size_t playerCount;
+	in >> playerCount;
+	in.ignore();
 
-    for (size_t i = 0; i < playerCount; i++)
-    {
-        std::string type, uname, pwd;
-        in >> type >> uname >> pwd;
-        auto player = std::make_unique<Player>(uname, pwd);
-        player->loadFromFile(in);
-        players.push_back(std::move(player));
-    }
+	for (size_t i = 0; i < playerCount; i++)
+	{
+		std::string type, uname, pwd;
+		in >> type >> uname >> pwd;
+		auto player = std::make_unique<Player>(uname, pwd);
+		player->loadFromFile(in);
+		players.push_back(std::move(player));
+	}
 
-    // MarketManager
-    int mmFlag;
-    in >> mmFlag;
-    if (mmFlag)
-    {
-        std::string uname, pwd;
-        in >> uname >> pwd;
-        MarketManager::getInstance().setCredentials(uname, pwd);
-    }
+	// MarketManager
+	int mmFlag;
+	in >> mmFlag;
+	if (mmFlag)
+	{
+		std::string uname, pwd;
+		in >> uname >> pwd;
+		MarketManager::getInstance().setCredentials(uname, pwd);
+	}
 
-    // TaskManager
-    int tmFlag;
-    in >> tmFlag;
-    if (tmFlag)
-    {
-        std::string uname, pwd;
-        in >> uname >> pwd;
-        TaskManager::getInstance().setCredentials(uname, pwd);
-    }
+	// TaskManager
+	int tmFlag;
+	in >> tmFlag;
+	if (tmFlag)
+	{
+		std::string uname, pwd;
+		in >> uname >> pwd;
+		TaskManager::getInstance().setCredentials(uname, pwd);
+	}
 
-    // Market state
-    market.loadFromFile(in);
+	// Market state
+	market.loadFromFile(in);
 
-    // TaskBoard state (replaces the default tasks)
-    // First clear the default tasks we inserted in the constructor
-    // by re-initialising via loadFromFile
-    taskBoard.loadFromFile(in);
+	// TaskBoard state (replaces the default tasks)
+	// First clear the default tasks we inserted in the constructor
+	// by re-initialising via loadFromFile
+	taskBoard.loadFromFile(in);
 
-    std::cout << "Game loaded successfully." << std::endl;
+	std::cout << "Game loaded successfully." << std::endl;
 }
 void Game::showHelpNotLoggedIn() const
 {
-    std::cout << "Available commands:\n"
-        << "  register <username> <password> <type>\n"
-        << "  login <username> <password>\n"
-        << "  exit\n";
+	std::cout << "Available commands:\n"
+		<< "  register <username> <password> <type>\n"
+		<< "  login <username> <password>\n"
+		<< "  exit\n";
 }
 
 void Game::showHelpPlayer() const
 {
-    std::cout << "Available commands:\n"
-        << "  logout\n"
-        << "  profileInfo\n"
-        << "  changePassword <oldPassword> <newPassword>\n"
-        << "  checkBalance\n"
-        << "  checkScore\n"
-        << "  checkBarn\n"
-        << "  checkFarm\n"
-        << "  expandCropland\n"
-        << "  expandFarmland\n"
-        << "  sowPlant <seedId>\n"
-        << "  addAnimal <animalId>\n"
-        << "  harvest\n"
-        << "  openMarketCatalog\n"
-        << "  buyItem <productId> <quantity>\n"
-        << "  sellItem <productId> <quantity>\n"
-        << "  showTaskBoard\n"
-        << "  completeTask <taskId>\n"
+	std::cout << "Available commands:\n"
+		<< "  logout\n"
+		<< "  profileInfo\n"
+		<< "  changePassword <oldPassword> <newPassword>\n"
+		<< "  checkBalance\n"
+		<< "  checkScore\n"
+		<< "  checkBarn\n"
+		<< "  checkFarm\n"
+		<< "  expandCropland\n"
+		<< "  expandFarmland\n"
+		<< "  sowPlant <seedId>\n"
+		<< "  addAnimal <animalId>\n"
+		<< "  harvest\n"
+		<< "  openMarketCatalog\n"
+		<< "  buyItem <productId> <quantity>\n"
+		<< "  sellItem <productId> <quantity>\n"
+		<< "  showTaskBoard\n"
+		<< "  completeTask <taskId>\n"
 		<< "  showScoreboard\n";
 }
 
 void Game::showHelpTaskManager() const
 {
-    std::cout << "Available commands:\n"
-        << "  logout\n"
-        << "  profileInfo\n"
-        << "  changePassword <oldPassword> <newPassword>\n"
-        << "  showTasks\n"
-        << "  addTask <product> <quantity> <rewardBalance> <rewardScore>\n"
+	std::cout << "Available commands:\n"
+		<< "  logout\n"
+		<< "  profileInfo\n"
+		<< "  changePassword <oldPassword> <newPassword>\n"
+		<< "  showTasks\n"
+		<< "  addTask <product> <quantity> <rewardBalance> <rewardScore>\n"
 		<< "  removeTask <taskId>\n";
 }
 
 void Game::showHelpMarketManager() const
 {
-    std::cout << "Available commands:\n"
-        << "  logout\n"
-        << "  profileInfo\n"
-        << "  changePassword <oldPassword> <newPassword>\n"
-        << "  openMarketCatalog\n"
-        << "  restock <productId> <quantity>\n"
+	std::cout << "Available commands:\n"
+		<< "  logout\n"
+		<< "  profileInfo\n"
+		<< "  changePassword <oldPassword> <newPassword>\n"
+		<< "  openMarketCatalog\n"
+		<< "  restock <productId> <quantity>\n"
 		<< "  changePrice <productId> <newPrice>\n";
 }

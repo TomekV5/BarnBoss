@@ -3,15 +3,14 @@
 
 LoginCommand::LoginCommand(Game& game, const std::vector<std::string>& args) :game(game), args(args)
 {
+    if (args.size() != 3)
+    {
+        throw std::invalid_argument("Usage: login <username> <password>");
+    }
 }
 
 void LoginCommand::execute()
 {
-    if (args.size() != 3)
-    {
-        std::cout << "Usage: login <username> <password>" << std::endl;
-        return;
-    }
     const std::string& username = args[1];
     const std::string& password = args[2];
 

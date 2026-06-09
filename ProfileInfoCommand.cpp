@@ -1,11 +1,11 @@
 #include "ProfileInfoCommand.h"
 
-ProfileInfoCommand::ProfileInfoCommand(Game& game)
-    : game(game)
+ProfileInfoCommand::ProfileInfoCommand(User* user)
+    : user(user)
 {
 }
 
 void ProfileInfoCommand::execute()
 {
-	game.profileInfo();
+	std::cout << user->profileInfo() << std::endl;
 }

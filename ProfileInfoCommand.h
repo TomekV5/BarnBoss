@@ -4,9 +4,9 @@
 class ProfileInfoCommand :public Command
 {
 private:
-	Game& game;
+	User* user;
 public:
-	ProfileInfoCommand(Game& game);
+	ProfileInfoCommand(User* user);
 	void execute() override;
 };
 
