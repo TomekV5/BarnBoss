@@ -37,23 +37,21 @@ void MarketManager::openMarketCatalog() const
     Market::getInstance().showCatalog();
 }
 
-bool MarketManager::restock(int productId, unsigned quantity)
+bool MarketManager::restock(ProductType type, unsigned quantity)
 {
-    ProductType type = fromInt(productId);
     if (type == ProductType::Undefined)
     {
-        std::cout << "Invalid product id: " << productId << std::endl;
+        std::cout << "Invalid product type." << std::endl;
         return false;
     }
     return Market::getInstance().restock(type, quantity);
 }
 
-bool MarketManager::changePrice(int productId, double newPrice)
+bool MarketManager::changePrice(ProductType type, double newPrice)
 {
-    ProductType type = fromInt(productId);
     if (type == ProductType::Undefined)
     {
-        std::cout << "Invalid product id: " << productId << std::endl;
+        std::cout << "Invalid product type." << std::endl;
         return false;
     }
     return Market::getInstance().changePrice(type, newPrice);

@@ -35,8 +35,7 @@ void Player::addScore(int amount) { score += amount; }
 std::string Player::profileInfo() const
 {
     std::ostringstream oss;
-    oss << "ID: " << id << "\n"
-        << "Username: " << username << "\n"
+    oss << "Username: " << username << "\n"
         << "Type: Player\n"
         << "Balance: " << std::fixed << std::setprecision(2) << balance << "\n"
         << "Score: " << score;

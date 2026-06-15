@@ -74,3 +74,16 @@ int toInt(ProductType type)
 	}
 }
 
+ProductType fromString(const std::string& str)
+{
+	if (str == "Wheat") return ProductType::Wheat;
+	else if (str == "Corn") return ProductType::Corn;
+	else if (str == "Egg") return ProductType::Egg;
+	else if (str == "Milk") return ProductType::Milk;
+	else if (str == "Wheat_Seed") return ProductType::Wheat_Seed;
+	else if (str == "Corn_Seed") return ProductType::Corn_Seed;
+	else if (str == "Chicken") return ProductType::Chicken;
+	else if (str == "Cow") return ProductType::Cow;
+	else return ProductType::Undefined;
+}
+

@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 
+#include "Helper.h"
 #include "Player.h"
 #include "TaskManager.h"
 #include "MarketManager.h"
@@ -29,6 +30,10 @@
 #include "ShowTaskBoardCommand.h"
 #include "CompleteTaskCommand.h"
 #include "ShowScoreboardCommand.h"
+#include "AddTaskCommand.h"
+#include "RemoveTaskCommand.h"
+#include "RestockCommand.h"
+#include "ChangePriceCommand.h"
 
 class Game
 {
@@ -60,17 +65,6 @@ private:
 
     // Commands available to all logged-in users
     void cmdChangePassword(const std::vector<std::string>& args);
-
-    // Player commands
-
-    // TaskManager commands
-    void cmdShowTasks();
-    void cmdAddTask(const std::vector<std::string>& args);
-    void cmdRemoveTask(const std::vector<std::string>& args);
-
-    // MarketManager commands
-    void cmdRestock(const std::vector<std::string>& args);
-    void cmdChangePrice(const std::vector<std::string>& args);
 
 	//comand helpers
 	void showHelpNotLoggedIn() const;

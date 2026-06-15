@@ -4,13 +4,12 @@ AddAnimalCommand::AddAnimalCommand(Player* player, const std::vector<std::string
 {
 	if (args.size() != 2)
 	{
-		throw std::invalid_argument("Usage: addAnimal <animalId>");
+		throw std::invalid_argument("Usage: addAnimal <animalName>");
 	}
-	int animalId = std::stoi(args[1]);
-	type = fromInt(animalId);
+	type = fromString(args[1]);
 	if (type != ProductType::Chicken && type != ProductType::Cow)
 	{
-		throw std::invalid_argument("Invalid animal id. Use 3 (Chicken) or 4 (Cow).");
+		throw std::invalid_argument("Invalid animal name. Use 'Chicken' or 'Cow'.");
 	}
 }
 

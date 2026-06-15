@@ -4,15 +4,13 @@ BuyItemCommand::BuyItemCommand(Player* player, Market& market, const std::vector
 {
 	if (args.size() != 3)
 	{
-		throw std::invalid_argument("Usage: buyItem <productId> <quantity>");
+		throw std::invalid_argument("Usage: buyItem <productName> <quantity>");
 	}
-	int productId = std::stoi(args[1]);
+	type = fromString(args[1]);
 	quantity = static_cast<unsigned>(std::stoi(args[2]));
-	type = fromInt(productId);
-
 	if (type == ProductType::Undefined)
 	{
-		throw std::invalid_argument("Invalid product id.");
+		throw std::invalid_argument("Invalid product name. Use 'Wheat', 'Corn', 'Milk', etc.");
 	}
 }
 

@@ -4,13 +4,12 @@ SowPlantCommand::SowPlantCommand(Player* player, const std::vector<std::string>&
 {
     if (args.size() != 2)
     {
-       throw std::invalid_argument("Usage: sowPlant <seedId>");
+       throw std::invalid_argument("Usage: sowPlant <seedName>");
     }
-    int seedId = std::stoi(args[1]);
-    type = fromInt(seedId);
+    type = fromString(args[1]);
     if (type != ProductType::Wheat_Seed && type != ProductType::Corn_Seed)
     {
-        throw std::invalid_argument("Invalid seed id. Use 1 (Wheat Seed) or 2 (Corn Seed).");
+        throw std::invalid_argument("Invalid seed name. Use 'Wheat_Seed' or 'Corn_Seed'.");
     }
 }
 

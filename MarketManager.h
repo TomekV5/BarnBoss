@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "User.h"
+#include "ProductType.h"
 
 class MarketManager : public User
 {
@@ -18,6 +19,6 @@ public:
     std::string profileInfo() const override;
 
     void openMarketCatalog() const;
-    bool restock(int productId, unsigned quantity);
-    bool changePrice(int productId, double newPrice);
+    bool restock(ProductType type, unsigned quantity);
+    bool changePrice(ProductType type, double newPrice);
 };

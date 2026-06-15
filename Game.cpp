@@ -27,54 +27,25 @@ void Game::run()
 	load(); // attempt to restore saved state
 	running = true;
 	printHeader();
+	std::cout << GREEN << "> ";
+	std::cout.flush();
 
 	std::string line;
-	if (!currentUser) {
-		showHelpNotLoggedIn();
-	}
-	else if (currentPlayer())
-	{
-		showHelpPlayer();
-	}
-	else if (currentTaskManager())
-	{
-		showHelpTaskManager();
-	}
-	else if (currentMarketManager())
-	{
-		showHelpMarketManager();
-	}
 	while (running && std::getline(std::cin, line))
 	{
 		if (line.empty()) continue;
-		std::cout << "> ";
 		processCommand(line);
-		if (!currentUser) {
-			showHelpNotLoggedIn();
-		}
-		else if (currentPlayer())
-		{
-			showHelpPlayer();
-		}
-		else if (currentTaskManager())
-		{
-			showHelpTaskManager();
-		}
-		else if (currentMarketManager())
-		{
-			showHelpMarketManager();
-		}
+		if(running) std::cout << GREEN << "> ";
 	}
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────
 void Game::printHeader() const
 {
-	std::cout << "========================================\n";
+	std::cout << BOLDRED << "========================================\n";
 	std::cout << "            BARN BOSS\n";
-	std::cout << "========================================\n";
-	std::cout << "> ";
-	std::cout.flush();
+	std::cout << "========================================\n" << RESET;
+	std::cout << "Type 'help' for a list of commands." << std::endl;
 }
 
 // ── Tokeniser helper ───────────────────────────────────────────────────────
@@ -90,6 +61,7 @@ static std::vector<std::string> tokenise(const std::string& line)
 // ── Command dispatcher ─────────────────────────────────────────────────────
 void Game::processCommand(const std::string& line)
 {
+	std::cout << RESET;
 	auto args = tokenise(line);
 	if (args.empty()) return;
 
@@ -100,7 +72,11 @@ void Game::processCommand(const std::string& line)
 	if (!currentUser)
 	{
 		try {
-			if (cmd == "register") {
+			if (cmd == "help") {
+				showHelpNotLoggedIn();
+				return;
+			}
+			else if (cmd == "register") {
 				cmdPtr = std::make_unique<RegisterCommand>(*this, args);
 			}
 			else if (cmd == "login") {
@@ -110,6 +86,7 @@ void Game::processCommand(const std::string& line)
 			else if (cmd == "exit")
 			{
 				exit();
+				return;
 			}
 			if (cmdPtr)
 				cmdPtr->execute();
@@ -124,7 +101,16 @@ void Game::processCommand(const std::string& line)
 
 	// ── Commands available to every logged-in user ─────────────────────────
 	try {
-		if (cmd == "logout")
+		if (cmd == "help") {
+			if (currentPlayer())
+				showHelpPlayer();
+			else if (currentTaskManager())
+				showHelpTaskManager();
+			else if (currentMarketManager())
+				showHelpMarketManager();
+			return;
+		}
+		else if (cmd == "logout")
 		{
 			cmdPtr = std::make_unique<LogOutCommand>(*this);
 		}
@@ -142,10 +128,6 @@ void Game::processCommand(const std::string& line)
 		if (cmdPtr) {
 			cmdPtr->execute();
 			return;
-		}
-		else
-		{
-			std::cout << "Unknown command." << std::endl;
 		}
 	}
 	catch (const std::invalid_argument& e) {
@@ -201,6 +183,7 @@ void Game::processCommand(const std::string& line)
 			}
 			else if (cmd == "showScoreboard") {
 				cmdPtr = std::make_unique<ShowScoreboardCommand>(scoreboard, allPlayers());
+
 			}
 			if (cmdPtr)
 			{
@@ -224,8 +207,12 @@ void Game::processCommand(const std::string& line)
 			{
 				cmdPtr = std::make_unique<ShowTaskBoardCommand>(taskBoard);
 			}
-			else if (cmd == "addTask")    cmdAddTask(args);
-			else if (cmd == "removeTask") cmdRemoveTask(args);
+			else if (cmd == "addTask") {
+				cmdPtr = std::make_unique<AddTaskCommand>(*currentTaskManager(), args);
+			}
+			else if (cmd == "removeTask") {
+				cmdPtr = std::make_unique<RemoveTaskCommand>(*currentTaskManager(), args);
+			}
 			if (cmdPtr) {
 				cmdPtr->execute();
 			}
@@ -247,8 +234,12 @@ void Game::processCommand(const std::string& line)
 			if (cmd == "openMarketCatalog") {
 				cmdPtr = std::make_unique<OpenMarketCommand>(market);
 			}
-			else if (cmd == "restock")           cmdRestock(args);
-			else if (cmd == "changePrice")       cmdChangePrice(args);
+			else if (cmd == "restock") {
+				cmdPtr = std::make_unique<RestockCommand>(*currentMarketManager(), args);
+			}
+			else if (cmd == "changePrice") {
+				cmdPtr = std::make_unique<ChangePriceCommand>(*currentMarketManager(), args);
+			}
 			if (cmdPtr) {
 				cmdPtr->execute();
 			}
@@ -261,8 +252,6 @@ void Game::processCommand(const std::string& line)
 			std::cout << e.what() << std::endl;
 		}
 	}
-
-	std::cout << "Unknown command." << std::endl;
 }
 
 void Game::exit()
@@ -299,7 +288,6 @@ void Game::registerUser(const std::string& username, const std::string& password
 		std::cout << "Username already taken.\n";
 		return;
 	}
-
 	if (type == "Player")
 	{
 		players.push_back(std::make_unique<Player>(username, password));
@@ -349,6 +337,8 @@ void Game::loginUser(const std::string& username, const std::string& password)
 				return;
 			}
 			currentUser = p.get();
+			clearConsole();
+			printHeader();
 			std::cout << "Welcome, " << username << "!" << std::endl;
 			return;
 		}
@@ -395,6 +385,7 @@ void Game::loginUser(const std::string& username, const std::string& password)
 
 void Game::logout()
 {
+	clearConsole();
 	std::cout << "Goodbye, " << currentUser->getUsername() << "!" << std::endl;
 	currentUser = nullptr;
 	printHeader();
@@ -417,86 +408,6 @@ void Game::cmdChangePassword(const std::vector<std::string>& args)
 	else
 		std::cout << "Incorrect old password." << std::endl;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  PLAYER COMMANDS
-// ═══════════════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  TASKMANAGER COMMANDS
-// ═══════════════════════════════════════════════════════════════════════════
-
-void Game::cmdShowTasks()
-{
-	taskBoard.showTasks();
-}
-
-void Game::cmdAddTask(const std::vector<std::string>& args)
-{
-	// addTask <product> <quantity> <rewardBalance> <rewardScore>
-	if (args.size() != 5)
-	{
-		std::cout << "Usage: addTask <product> <quantity> <rewardBalance> <rewardScore>" << std::endl;
-		return;
-	}
-	unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
-	double rewardBalance = std::stod(args[3]);
-	int rewardScore = std::stoi(args[4]);
-
-	if (currentTaskManager()->addTask(args[1], qty, rewardBalance, rewardScore))
-		std::cout << "Task added successfully!" << std::endl;
-}
-
-void Game::cmdRemoveTask(const std::vector<std::string>& args)
-{
-	if (args.size() != 2)
-	{
-		std::cout << "Usage: removeTask <taskId>" << std::endl;
-		return;
-	}
-	unsigned taskId = static_cast<unsigned>(std::stoi(args[1]));
-	if (currentTaskManager()->removeTask(taskId))
-		std::cout << "Task removed successfully." << std::endl;
-	else
-		std::cout << "Task not found." << std::endl;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  MARKETMANAGER COMMANDS
-// ═══════════════════════════════════════════════════════════════════════════
-
-void Game::cmdRestock(const std::vector<std::string>& args)
-{
-	if (args.size() != 3)
-	{
-		std::cout << "Usage: restock <productId> <quantity>" << std::endl;
-		return;
-	}
-	int productId = std::stoi(args[1]);
-	unsigned qty = static_cast<unsigned>(std::stoi(args[2]));
-
-	if (currentMarketManager()->restock(productId, qty))
-		std::cout << "Restocked successfully." << std::endl;
-	else
-		std::cout << "Restock failed." << std::endl;
-}
-
-void Game::cmdChangePrice(const std::vector<std::string>& args)
-{
-	if (args.size() != 3)
-	{
-		std::cout << "Usage: changePrice <productId> <newPrice>" << std::endl;
-		return;
-	}
-	int    productId = std::stoi(args[1]);
-	double newPrice = std::stod(args[2]);
-
-	if (currentMarketManager()->changePrice(productId, newPrice))
-		std::cout << "Price updated successfully." << std::endl;
-	else
-		std::cout << "Price change failed." << std::endl;
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 //  UTILITY
 // ═══════════════════════════════════════════════════════════════════════════
@@ -625,52 +536,56 @@ void Game::load()
 void Game::showHelpNotLoggedIn() const
 {
 	std::cout << "Available commands:\n"
-		<< "  register <username> <password> <type>\n"
-		<< "  login <username> <password>\n"
-		<< "  exit\n";
+		<< CYAN << "help\n" << RESET
+		<< "register <username> <password> <type>\n"
+		<< "login <username> <password>\n"
+		<< BOLDRED << "exit\n" << RESET;
 }
 
 void Game::showHelpPlayer() const
 {
 	std::cout << "Available commands:\n"
-		<< "  logout\n"
-		<< "  profileInfo\n"
-		<< "  changePassword <oldPassword> <newPassword>\n"
-		<< "  checkBalance\n"
-		<< "  checkScore\n"
-		<< "  checkBarn\n"
-		<< "  checkFarm\n"
-		<< "  expandCropland\n"
-		<< "  expandFarmland\n"
-		<< "  sowPlant <seedId>\n"
-		<< "  addAnimal <animalId>\n"
-		<< "  harvest\n"
-		<< "  openMarketCatalog\n"
-		<< "  buyItem <productId> <quantity>\n"
-		<< "  sellItem <productId> <quantity>\n"
-		<< "  showTaskBoard\n"
-		<< "  completeTask <taskId>\n"
-		<< "  showScoreboard\n";
+		<< CYAN << "help\n" << RESET
+		<< "logout\n"
+		<< "profileInfo\n"
+		<< "changePassword <oldPassword> <newPassword>\n"
+		<< "checkBalance\n"
+		<< "checkScore\n"
+		<< "checkBarn\n"
+		<< "checkFarm\n"
+		<< "expandCropland\n"
+		<< "expandFarmland\n"
+		<< "sowPlant <seedName>\n"
+		<< "addAnimal <animalName>\n"
+		<< "harvest\n"
+		<< "openMarketCatalog\n"
+		<< "buyItem <productName> <quantity>\n"
+		<< "sellItem <productName> <quantity>\n"
+		<< "showTaskBoard\n"
+		<< "completeTask <taskId>\n"
+		<< "showScoreboard\n";
 }
 
 void Game::showHelpTaskManager() const
 {
 	std::cout << "Available commands:\n"
-		<< "  logout\n"
-		<< "  profileInfo\n"
-		<< "  changePassword <oldPassword> <newPassword>\n"
-		<< "  showTasks\n"
-		<< "  addTask <product> <quantity> <rewardBalance> <rewardScore>\n"
-		<< "  removeTask <taskId>\n";
+		<< CYAN << "help\n" << RESET
+		<< "logout\n"
+		<< "profileInfo\n"
+		<< "changePassword <oldPassword> <newPassword>\n"
+		<< "showTasks\n"
+		<< "addTask <product> <quantity> <rewardBalance> <rewardScore>\n"
+		<< "removeTask <taskId>\n";
 }
 
 void Game::showHelpMarketManager() const
 {
 	std::cout << "Available commands:\n"
-		<< "  logout\n"
-		<< "  profileInfo\n"
-		<< "  changePassword <oldPassword> <newPassword>\n"
-		<< "  openMarketCatalog\n"
-		<< "  restock <productId> <quantity>\n"
-		<< "  changePrice <productId> <newPrice>\n";
+		<< CYAN << "help\n" << RESET
+		<< "logout\n"
+		<< "profileInfo\n"
+		<< "changePassword <oldPassword> <newPassword>\n"
+		<< "openMarketCatalog\n"
+		<< "restock <productName> <quantity>\n"
+		<< "changePrice <productName> <newPrice>\n";
 }
