@@ -183,7 +183,9 @@ void Game::processCommand(const std::string& line)
 			}
 			else if (cmd == "showScoreboard") {
 				cmdPtr = std::make_unique<ShowScoreboardCommand>(scoreboard, allPlayers());
-
+			}
+			else if(cmd=="advanceCycle") {
+				cmdPtr = std::make_unique<AdvanceCycleCommand>(currentPlayer());
 			}
 			if (cmdPtr)
 			{
@@ -563,7 +565,8 @@ void Game::showHelpPlayer() const
 		<< "sellItem <productName> <quantity>\n"
 		<< "showTaskBoard\n"
 		<< "completeTask <taskId>\n"
-		<< "showScoreboard\n";
+		<< "showScoreboard\n"
+		<< "advanceCycle\n";
 }
 
 void Game::showHelpTaskManager() const

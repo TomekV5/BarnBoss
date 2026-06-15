@@ -16,6 +16,7 @@ BuyItemCommand::BuyItemCommand(Player* player, Market& market, const std::vector
 
 void BuyItemCommand::execute()
 {
+	player->getFarm().advanceCycles();
 	if (market.buyProduct(type, quantity, *player))
 	{
 		std::cout << "The purchase was successful!" << std::endl;

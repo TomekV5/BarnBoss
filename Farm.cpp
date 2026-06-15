@@ -7,9 +7,7 @@ static const size_t INITIAL_CROPLAND_CAPACITY = 3;
 static const size_t INITIAL_FARMLAND_CAPACITY = 3;
 
 // ── Constructor ────────────────────────────────────────────────────────────
-Farm::Farm()
-    : croplandCapacity(INITIAL_CROPLAND_CAPACITY),
-    farmlandCapacity(INITIAL_FARMLAND_CAPACITY)
+Farm::Farm(): croplandCapacity(INITIAL_CROPLAND_CAPACITY), farmlandCapacity(INITIAL_FARMLAND_CAPACITY)
 {
 }
 
@@ -26,6 +24,7 @@ bool Farm::sowPlant(ProductType seedType, Barn& barn)
         std::cout << "Cannot plant: No " << toString(seedType) << " in barn." << std::endl;
         return false;
     }
+    advanceCycles();
 
     barn.removeProduct(seedType, 1);
     cropland.emplace_back(seedType);
@@ -45,7 +44,7 @@ bool Farm::addAnimal(ProductType animalType, Barn& barn)
         std::cout << "Cannot add animal: No " << toString(animalType) << " in barn." << std::endl;
         return false;
     }
-
+    advanceCycles();
     barn.removeProduct(animalType, 1);
     farmland.emplace_back(animalType);
     return true;
@@ -55,10 +54,6 @@ bool Farm::addAnimal(ProductType animalType, Barn& barn)
 int Farm::harvest(Barn& barn)
 {
     int harvested = 0;
-
-    // Advance all cycles first
-    for (auto& plant : cropland)  plant.advanceCycle();
-    for (auto& animal : farmland)  animal.advanceCycle();
 
     // Collect ready plants and remove them
     auto plantIt = cropland.begin();
@@ -95,14 +90,22 @@ int Farm::harvest(Barn& barn)
     return harvested;
 }
 
+void Farm::advanceCycles()
+{
+    for (auto& plant : cropland)  plant.advanceCycle();
+    for (auto& animal : farmland)  animal.advanceCycle();
+}
+
 
 void Farm::expandCropland()
 {
+    advanceCycles();
     ++croplandCapacity;
 }
 
 void Farm::expandFarmland()
 {
+	advanceCycles();
     ++farmlandCapacity;
 }
 

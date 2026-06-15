@@ -34,6 +34,7 @@
 #include "RemoveTaskCommand.h"
 #include "RestockCommand.h"
 #include "ChangePriceCommand.h"
+#include "AdvanceCycleCommand.h"
 
 class Game
 {

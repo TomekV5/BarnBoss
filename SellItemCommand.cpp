@@ -19,6 +19,7 @@ SellItemCommand::SellItemCommand(Player* player, Market& market, const std::vect
 
 void SellItemCommand::execute()
 {
+    player->getFarm().advanceCycles();
     if (market.sellProduct(type, quantity, *player))
         std::cout << "The sale was successful!" << std::endl;
     else

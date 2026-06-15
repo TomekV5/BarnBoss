@@ -27,6 +27,7 @@ public:
     // Advances all cycles by 1, then collects every ready plant/animal into
     // barn and removes it from the farm. Returns number of items harvested.
     int harvest(Barn& barn);
+	void advanceCycles();
 
     // ── Expansion ──────────────────────────────────────────────────────────
     void expandCropland();
