@@ -33,9 +33,9 @@ void CompleteTaskCommand::execute()
 	player->getBarn().removeProduct(required, quantity);
 	player->addBalance(task->getRewardBalance());
 	player->addScore(task->getRewardScore());
-	taskBoard.removeTask(taskId);
 	player->getFarm().advanceCycles();
 
 	std::cout << "Task completed! Reward: +" << task->getRewardBalance()
 		<< " Balance, +" << task->getRewardScore() << " Score." << std::endl;
+	taskBoard.removeTask(taskId);
 }

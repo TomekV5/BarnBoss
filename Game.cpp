@@ -3,14 +3,14 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <iomanip>
+//#include <iomanip>
 
 // ── Save file path ─────────────────────────────────────────────────────────
 const char* Game::SAVE_FILE = "barnboss_save.txt";
 
 // ── Constructor ────────────────────────────────────────────────────────────
 Game::Game()
-	: currentUser(nullptr),
+	: currentUser(nullptr), currentPlayer(nullptr), currentMarketManager(nullptr), currentTaskManager(nullptr),
 	running(false),
 	market(Market::getInstance()),
 	taskBoard(TaskBoard::getInstance()),
@@ -35,7 +35,7 @@ void Game::run()
 	{
 		if (line.empty()) continue;
 		processCommand(line);
-		if(running) std::cout << GREEN << "> ";
+		if (running) std::cout << GREEN << "> ";
 	}
 }
 
@@ -102,11 +102,11 @@ void Game::processCommand(const std::string& line)
 	// ── Commands available to every logged-in user ─────────────────────────
 	try {
 		if (cmd == "help") {
-			if (currentPlayer())
+			if (currentPlayer)
 				showHelpPlayer();
-			else if (currentTaskManager())
+			else if (currentTaskManager)
 				showHelpTaskManager();
-			else if (currentMarketManager())
+			else if (currentMarketManager)
 				showHelpMarketManager();
 			return;
 		}
@@ -136,56 +136,56 @@ void Game::processCommand(const std::string& line)
 
 
 	// ── Player commands ────────────────────────────────────────────────────
-	if (currentPlayer())
+	if (currentPlayer)
 	{
 		try {
 			if (cmd == "checkBalance") {
-				cmdPtr = std::make_unique<CheckBalanceCommand>(currentPlayer());
+				cmdPtr = std::make_unique<CheckBalanceCommand>(currentPlayer);
 			}
 			else if (cmd == "checkScore") {
-				cmdPtr = std::make_unique<CheckScoreCommand>(currentPlayer());
+				cmdPtr = std::make_unique<CheckScoreCommand>(currentPlayer);
 			}
 			else if (cmd == "checkBarn") {
-				cmdPtr = std::make_unique<CheckBarnCommand>(currentPlayer());
+				cmdPtr = std::make_unique<CheckBarnCommand>(currentPlayer);
 			}
 			else if (cmd == "checkFarm") {
-				cmdPtr = std::make_unique<CheckFarmCommand>(currentPlayer());
+				cmdPtr = std::make_unique<CheckFarmCommand>(currentPlayer);
 			}
 			else if (cmd == "expandCropland") {
-				cmdPtr = std::make_unique<ExpandCroplandCommand>(currentPlayer());
+				cmdPtr = std::make_unique<ExpandCroplandCommand>(currentPlayer);
 			}
 			else if (cmd == "expandFarmland") {
-				cmdPtr = std::make_unique<ExpandFarmlandCommand>(currentPlayer());
+				cmdPtr = std::make_unique<ExpandFarmlandCommand>(currentPlayer);
 			}
 			else if (cmd == "sowPlant") {
-				cmdPtr = std::make_unique<SowPlantCommand>(currentPlayer(), args);
+				cmdPtr = std::make_unique<SowPlantCommand>(currentPlayer, args);
 			}
 			else if (cmd == "addAnimal") {
-				cmdPtr = std::make_unique<AddAnimalCommand>(currentPlayer(), args);
+				cmdPtr = std::make_unique<AddAnimalCommand>(currentPlayer, args);
 			}
 			else if (cmd == "harvest") {
-				cmdPtr = std::make_unique<HarvestCommand>(currentPlayer());
+				cmdPtr = std::make_unique<HarvestCommand>(currentPlayer);
 			}
 			else if (cmd == "openMarketCatalog") {
 				cmdPtr = std::make_unique<OpenMarketCommand>(market);
 			}
 			else if (cmd == "buyItem") {
-				cmdPtr = std::make_unique<BuyItemCommand>(currentPlayer(), market, args);
+				cmdPtr = std::make_unique<BuyItemCommand>(currentPlayer, market, args);
 			}
 			else if (cmd == "sellItem") {
-				cmdPtr = std::make_unique<SellItemCommand>(currentPlayer(), market, args);
+				cmdPtr = std::make_unique<SellItemCommand>(currentPlayer, market, args);
 			}
 			else if (cmd == "showTaskBoard") {
 				cmdPtr = std::make_unique<ShowTaskBoardCommand>(taskBoard);
 			}
 			else if (cmd == "completeTask") {
-				cmdPtr = std::make_unique<CompleteTaskCommand>(currentPlayer(), taskBoard, args);
+				cmdPtr = std::make_unique<CompleteTaskCommand>(currentPlayer, taskBoard, args);
 			}
 			else if (cmd == "showScoreboard") {
 				cmdPtr = std::make_unique<ShowScoreboardCommand>(scoreboard, allPlayers());
 			}
-			else if(cmd=="advanceCycle") {
-				cmdPtr = std::make_unique<AdvanceCycleCommand>(currentPlayer());
+			else if (cmd == "advanceCycle") {
+				cmdPtr = std::make_unique<AdvanceCycleCommand>(currentPlayer);
 			}
 			if (cmdPtr)
 			{
@@ -202,7 +202,7 @@ void Game::processCommand(const std::string& line)
 	}
 
 	// ── TaskManager commands ───────────────────────────────────────────────
-	if (currentTaskManager())
+	if (currentTaskManager)
 	{
 		try {
 			if (cmd == "showTasks")
@@ -210,10 +210,10 @@ void Game::processCommand(const std::string& line)
 				cmdPtr = std::make_unique<ShowTaskBoardCommand>(taskBoard);
 			}
 			else if (cmd == "addTask") {
-				cmdPtr = std::make_unique<AddTaskCommand>(*currentTaskManager(), args);
+				cmdPtr = std::make_unique<AddTaskCommand>(*currentTaskManager, args);
 			}
 			else if (cmd == "removeTask") {
-				cmdPtr = std::make_unique<RemoveTaskCommand>(*currentTaskManager(), args);
+				cmdPtr = std::make_unique<RemoveTaskCommand>(*currentTaskManager, args);
 			}
 			if (cmdPtr) {
 				cmdPtr->execute();
@@ -230,17 +230,17 @@ void Game::processCommand(const std::string& line)
 	}
 
 	// ── MarketManager commands ─────────────────────────────────────────────
-	if (currentMarketManager())
+	if (currentMarketManager)
 	{
 		try {
 			if (cmd == "openMarketCatalog") {
 				cmdPtr = std::make_unique<OpenMarketCommand>(market);
 			}
 			else if (cmd == "restock") {
-				cmdPtr = std::make_unique<RestockCommand>(*currentMarketManager(), args);
+				cmdPtr = std::make_unique<RestockCommand>(*currentMarketManager, args);
 			}
 			else if (cmd == "changePrice") {
-				cmdPtr = std::make_unique<ChangePriceCommand>(*currentMarketManager(), args);
+				cmdPtr = std::make_unique<ChangePriceCommand>(*currentMarketManager, args);
 			}
 			if (cmdPtr) {
 				cmdPtr->execute();
@@ -339,6 +339,7 @@ void Game::loginUser(const std::string& username, const std::string& password)
 				return;
 			}
 			currentUser = p.get();
+			currentPlayer = p.get();
 			clearConsole();
 			printHeader();
 			std::cout << "Welcome, " << username << "!" << std::endl;
@@ -357,6 +358,7 @@ void Game::loginUser(const std::string& username, const std::string& password)
 				return;
 			}
 			currentUser = &mm;
+			currentMarketManager = &mm;
 			std::cout << "Welcome, " << username << "!" << std::endl;
 			return;
 		}
@@ -373,6 +375,7 @@ void Game::loginUser(const std::string& username, const std::string& password)
 				return;
 			}
 			currentUser = &tm;
+			currentTaskManager = &tm;
 			std::cout << "Welcome, " << username << "!" << std::endl;
 			return;
 		}
@@ -390,6 +393,10 @@ void Game::logout()
 	clearConsole();
 	std::cout << "Goodbye, " << currentUser->getUsername() << "!" << std::endl;
 	currentUser = nullptr;
+	currentPlayer = nullptr;
+	currentMarketManager = nullptr;
+	currentTaskManager = nullptr;
+	save();
 	printHeader();
 }
 
@@ -413,21 +420,6 @@ void Game::cmdChangePassword(const std::vector<std::string>& args)
 // ═══════════════════════════════════════════════════════════════════════════
 //  UTILITY
 // ═══════════════════════════════════════════════════════════════════════════
-
-Player* Game::currentPlayer() const
-{
-	return dynamic_cast<Player*>(currentUser);
-}
-
-TaskManager* Game::currentTaskManager() const
-{
-	return dynamic_cast<TaskManager*>(currentUser);
-}
-
-MarketManager* Game::currentMarketManager() const
-{
-	return dynamic_cast<MarketManager*>(currentUser);
-}
 
 std::vector<Player*> Game::allPlayers() const
 {

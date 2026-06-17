@@ -43,6 +43,9 @@ private:
     // ── State ──────────────────────────────────────────────────────────────
     std::vector<std::unique_ptr<Player>> players; // all registered Players
     User* currentUser;
+    Player* currentPlayer;
+    TaskManager* currentTaskManager;
+    MarketManager* currentMarketManager;
     bool running;
 
     // Singletons – stored as references so we never delete them
@@ -79,9 +82,9 @@ private:
     void load();
 
     // Utility
-    Player* currentPlayer() const;  // nullptr if not a Player
-    TaskManager* currentTaskManager() const;
-    MarketManager* currentMarketManager() const;
+    //Player* currentPlayer() const;  // nullptr if not a Player
+    //TaskManager* currentTaskManager() const;
+    //MarketManager* currentMarketManager() const;
     std::vector<Player*> allPlayers() const;
 
 public:
