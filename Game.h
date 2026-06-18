@@ -77,7 +77,13 @@ private:
 	void showHelpMarketManager() const;
 
     // Save / load
-    static const char* SAVE_FILE;
+    std::string currentSaveFile;
+    void selectSaveFile();
+    std::vector<std::string> getSaveFiles() const;
+
+   // static const char* SAVE_FILE;
+
+    void loadFromFile(std::string filename);
     void save();
     void load();
 

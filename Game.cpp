@@ -3,10 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-//#include <iomanip>
-
-// ── Save file path ─────────────────────────────────────────────────────────
-const char* Game::SAVE_FILE = "barnboss_save.txt";
+#include <filesystem>
 
 // ── Constructor ────────────────────────────────────────────────────────────
 Game::Game()
@@ -27,6 +24,7 @@ void Game::run()
 	load(); // attempt to restore saved state
 	running = true;
 	printHeader();
+	std::cout << "Type 'help' for a list of commands." << std::endl;
 	std::cout << GREEN << "> ";
 	std::cout.flush();
 
@@ -45,7 +43,6 @@ void Game::printHeader() const
 	std::cout << BOLDRED << "========================================\n";
 	std::cout << "            BARN BOSS\n";
 	std::cout << "========================================\n" << RESET;
-	std::cout << "Type 'help' for a list of commands." << std::endl;
 }
 
 // ── Tokeniser helper ───────────────────────────────────────────────────────
@@ -342,6 +339,7 @@ void Game::loginUser(const std::string& username, const std::string& password)
 			currentPlayer = p.get();
 			clearConsole();
 			printHeader();
+			std::cout << "Type 'help' for a list of commands." << std::endl;
 			std::cout << "Welcome, " << username << "!" << std::endl;
 			return;
 		}
@@ -398,6 +396,7 @@ void Game::logout()
 	currentTaskManager = nullptr;
 	save();
 	printHeader();
+	std::cout << "Type 'help' for a list of commands." << std::endl;
 }
 
 void Game::cmdChangePassword(const std::vector<std::string>& args)
@@ -433,56 +432,93 @@ std::vector<Player*> Game::allPlayers() const
 //  SAVE / LOAD
 // ═══════════════════════════════════════════════════════════════════════════
 
-void Game::save()
+namespace fs = std::filesystem;
+
+std::vector<std::string> Game::getSaveFiles() const
 {
-	std::ofstream out(SAVE_FILE);
-	if (!out)
+	std::vector<std::string> saves;
+
+	if (!fs::exists("saves"))
 	{
-		std::cout << "Warning: could not open save file." << std::endl;
-		return;
+		fs::create_directory("saves");
+		return saves;
 	}
 
-	// Players
-	out << players.size() << "\n";
-	for (const auto& p : players)
-		p->saveToFile(out);
-
-	// MarketManager
-	out << (MarketManager::isRegistered() ? 1 : 0) << "\n";
-	if (MarketManager::isRegistered())
+	for (const auto& entry : fs::directory_iterator("saves"))
 	{
-		auto& mm = MarketManager::getInstance();
-		out << mm.getUsername() << " " << mm.getPasswordRaw() << "\n";
+		if (entry.is_regular_file() &&
+			entry.path().extension() == ".txt")
+		{
+			saves.push_back(entry.path().string());
+		}
 	}
 
-	// TaskManager
-	out << (TaskManager::isRegistered() ? 1 : 0) << "\n";
-	if (TaskManager::isRegistered())
-	{
-		auto& tm = TaskManager::getInstance();
-		out << tm.getUsername() << " " << tm.getPasswordRaw() << "\n";
-	}
-
-	// Market state
-	market.saveToFile(out);
-
-	// TaskBoard state
-	taskBoard.saveToFile(out);
+	return saves;
 }
-
-void Game::load()
+void Game::selectSaveFile()
 {
-	std::ifstream in(SAVE_FILE);
-	if (!in)
+	std::vector<std::string> saves = getSaveFiles();
+
+	printHeader();
+
+	std::cout << "Existing saves:\n";
+
+	for (size_t i = 0; i < saves.size(); i++)
 	{
-		// No save file – start fresh with default task board already seeded
-		// in the constructor.
-		return;
+		std::filesystem::path p(saves[i]);
+
+		std::cout
+			<< i + 1
+			<< ". "
+			<< p.filename().string()
+			<< '\n';
 	}
 
-	// Clear default tasks (they were seeded in constructor; save file has them)
-	// We reload the full task board from file instead.
-	// Players
+	std::cout << "\n0. Create new save\n";
+
+	int choice;
+
+	std::cout << "\nChoice: ";
+	std::cin >> choice;
+
+	std::cin.ignore();
+
+	if (choice == 0)
+	{
+		std::string name;
+
+		std::cout << "Enter save name: ";
+		std::getline(std::cin, name);
+
+		if (name.find(".txt") == std::string::npos)
+		{
+			name += ".txt";
+		}
+
+		currentSaveFile = "saves/" + name;
+		clearConsole();
+		std::cout << "New game created.\n";
+	}
+	else if (choice > 0 &&
+		choice <= static_cast<int>(saves.size()))
+	{
+		currentSaveFile = saves[choice - 1];
+
+		loadFromFile(currentSaveFile);
+		clearConsole();
+		std::cout << "Loaded "
+			<< currentSaveFile
+			<< '\n';
+	}
+	else
+	{
+		std::cout << "Invalid choice.\n";
+		selectSaveFile();
+	}
+}
+void Game::loadFromFile(std::string filename)
+{
+	std::ifstream in(filename);
 	players.clear();
 	size_t playerCount;
 	in >> playerCount;
@@ -525,7 +561,48 @@ void Game::load()
 	// by re-initialising via loadFromFile
 	taskBoard.loadFromFile(in);
 
-	std::cout << "Game loaded successfully." << std::endl;
+	//std::cout << "Game loaded successfully." << std::endl;
+}
+void Game::save()
+{
+	std::ofstream out(currentSaveFile);
+	if (!out)
+	{
+		std::cout << "Warning: could not open save file." << std::endl;
+		return;
+	}
+
+	// Players
+	out << players.size() << "\n";
+	for (const auto& p : players)
+		p->saveToFile(out);
+
+	// MarketManager
+	out << (MarketManager::isRegistered() ? 1 : 0) << "\n";
+	if (MarketManager::isRegistered())
+	{
+		auto& mm = MarketManager::getInstance();
+		out << mm.getUsername() << " " << mm.getPasswordRaw() << "\n";
+	}
+
+	// TaskManager
+	out << (TaskManager::isRegistered() ? 1 : 0) << "\n";
+	if (TaskManager::isRegistered())
+	{
+		auto& tm = TaskManager::getInstance();
+		out << tm.getUsername() << " " << tm.getPasswordRaw() << "\n";
+	}
+
+	// Market state
+	market.saveToFile(out);
+
+	// TaskBoard state
+	taskBoard.saveToFile(out);
+}
+
+void Game::load()
+{
+	selectSaveFile();
 }
 void Game::showHelpNotLoggedIn() const
 {
