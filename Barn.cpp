@@ -3,7 +3,6 @@
 
 Barn::Barn()
 {
-    // Initialise every known product type to 0
     inventory[ProductType::Wheat] = 0;
     inventory[ProductType::Corn] = 0;
     inventory[ProductType::Egg] = 0;

@@ -2,16 +2,13 @@
 #include <algorithm>
 #include <iostream>
 
-// ── Constants (from spec) ──────────────────────────────────────────────────
 static const size_t INITIAL_CROPLAND_CAPACITY = 3;
 static const size_t INITIAL_FARMLAND_CAPACITY = 3;
 
-// ── Constructor ────────────────────────────────────────────────────────────
 Farm::Farm(): croplandCapacity(INITIAL_CROPLAND_CAPACITY), farmlandCapacity(INITIAL_FARMLAND_CAPACITY)
 {
 }
 
-// ── Planting ───────────────────────────────────────────────────────────────
 bool Farm::sowPlant(ProductType seedType, Barn& barn)
 {
     if (cropland.size() >= croplandCapacity)
@@ -31,7 +28,6 @@ bool Farm::sowPlant(ProductType seedType, Barn& barn)
     return true;
 }
 
-// ── Adding animals ─────────────────────────────────────────────────────────
 bool Farm::addAnimal(ProductType animalType, Barn& barn)
 {
     if (farmland.size() >= farmlandCapacity)
@@ -50,12 +46,10 @@ bool Farm::addAnimal(ProductType animalType, Barn& barn)
     return true;
 }
 
-// ── Harvest ────────────────────────────────────────────────────────────────
 int Farm::harvest(Barn& barn)
 {
     int harvested = 0;
 
-    // Collect ready plants and remove them
     auto plantIt = cropland.begin();
     while (plantIt != cropland.end())
     {
@@ -71,7 +65,6 @@ int Farm::harvest(Barn& barn)
         }
     }
 
-    // Collect ready animals and remove them
     auto animalIt = farmland.begin();
     while (animalIt != farmland.end())
     {

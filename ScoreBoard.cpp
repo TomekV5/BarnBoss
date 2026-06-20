@@ -18,8 +18,7 @@ void ScoreBoard::showScoreboard(const std::vector<Player*>& players) const
         return;
     }
 
-    // Sort a copy: highest score first, then highest balance, then smallest id
-    std::vector<Player*> sorted = players;
+   std::vector<Player*> sorted = players;
     std::sort(sorted.begin(), sorted.end(), [](const Player* a, const Player* b)
         {
             if (a->getScore() != b->getScore())

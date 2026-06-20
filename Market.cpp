@@ -21,7 +21,6 @@ Market& Market::getInstance()
     return instance;
 }
 
-// ── MarketManager ─────────────────────────────────────────────────────────
 bool Market::restock(ProductType type, unsigned qty)
 {
     auto it = marketData.find(type);
@@ -38,7 +37,6 @@ bool Market::changePrice(ProductType type, double newPrice)
     return true;
 }
 
-// ── Player ────────────────────────────────────────────────────────────────
 bool Market::buyProduct(ProductType type, unsigned qty, Player& player)
 {
     auto it = marketData.find(type);
@@ -66,11 +64,9 @@ bool Market::sellProduct(ProductType type, unsigned qty, Player& player)
     return true;
 }
 
-// ── Display ───────────────────────────────────────────────────────────────
 void Market::showCatalog() const
 {
     std::cout << "=== MARKET CATALOG ===" << std::endl;
-    // Print in a fixed, readable order matching the spec
     const ProductType order[] = {
         ProductType::Wheat_Seed, ProductType::Corn_Seed,
         ProductType::Chicken,    ProductType::Cow,
@@ -89,7 +85,6 @@ void Market::showCatalog() const
     }
 }
 
-// ── Save / load ───────────────────────────────────────────────────────────
 void Market::saveToFile(std::ostream& out) const
 {
     out << marketData.size() << "\n";
@@ -118,4 +113,16 @@ std::ostream& operator<<(std::ostream& os, const Market& m)
 {
     m.showCatalog();
     return os;
+}
+void Market::reset()
+{
+    marketData.clear();
+    marketData[ProductType::Wheat_Seed] = { 20, 10.0 };
+    marketData[ProductType::Corn_Seed] = { 20, 15.0 };
+    marketData[ProductType::Chicken] = { 10, 25.0 };
+    marketData[ProductType::Cow] = { 5,  50.0 };
+    marketData[ProductType::Wheat] = { 20, 15.0 };
+    marketData[ProductType::Corn] = { 20, 20.0 };
+    marketData[ProductType::Egg] = { 15, 30.0 };
+    marketData[ProductType::Milk] = { 10, 60.0 };
 }

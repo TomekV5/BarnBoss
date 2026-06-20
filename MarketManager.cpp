@@ -56,3 +56,8 @@ bool MarketManager::changePrice(ProductType type, double newPrice)
     }
     return Market::getInstance().changePrice(type, newPrice);
 }
+void MarketManager::reset() {
+    marketManagerRegistered = false;
+    username = "";
+    password = "";
+}

@@ -5,39 +5,39 @@
 #include <algorithm>
 #include <filesystem>
 
-// ── Constructor ────────────────────────────────────────────────────────────
 Game::Game()
 	: currentUser(nullptr), currentPlayer(nullptr), currentMarketManager(nullptr), currentTaskManager(nullptr),
-	running(false),
+	running(false), megarun(false),
 	market(Market::getInstance()),
 	taskBoard(TaskBoard::getInstance()),
 	scoreboard(ScoreBoard::getInstance())
 {
-	// Seed the two default tasks from the spec
 	taskBoard.addTask(Product(ProductType::Wheat, 0, 0, ProductType::Undefined, 0), 5, 50.0, 10);
 	taskBoard.addTask(Product(ProductType::Milk, 0, 0, ProductType::Undefined, 0), 3, 120.0, 20);
 }
 
-// ── Entry point ────────────────────────────────────────────────────────────
 void Game::run()
 {
-	load(); // attempt to restore saved state
-	running = true;
-	printHeader();
-	std::cout << "Type 'help' for a list of commands." << std::endl;
-	std::cout << GREEN << "> ";
-	std::cout.flush();
+	megarun = true;
+	while (megarun) {
+		clearConsole();
+		load();
+		running = true;
+		printHeader();
+		std::cout << "Type 'help' for a list of commands." << std::endl;
+		std::cout << GREEN << "> ";
+		std::cout.flush();
 
-	std::string line;
-	while (running && std::getline(std::cin, line))
-	{
-		if (line.empty()) continue;
-		processCommand(line);
-		if (running) std::cout << GREEN << "> ";
+		std::string line;
+		while (running && std::getline(std::cin, line))
+		{
+			if (line.empty()) continue;
+			processCommand(line);
+			if (running) std::cout << GREEN << "> ";
+		}
 	}
 }
 
-// ── Header ─────────────────────────────────────────────────────────────────
 void Game::printHeader() const
 {
 	std::cout << BOLDRED << "========================================\n";
@@ -45,7 +45,6 @@ void Game::printHeader() const
 	std::cout << "========================================\n" << RESET;
 }
 
-// ── Tokeniser helper ───────────────────────────────────────────────────────
 static std::vector<std::string> tokenise(const std::string& line)
 {
 	std::vector<std::string> tokens;
@@ -55,7 +54,6 @@ static std::vector<std::string> tokenise(const std::string& line)
 	return tokens;
 }
 
-// ── Command dispatcher ─────────────────────────────────────────────────────
 void Game::processCommand(const std::string& line)
 {
 	std::cout << RESET;
@@ -65,7 +63,6 @@ void Game::processCommand(const std::string& line)
 	const std::string& cmd = args[0];
 	std::unique_ptr<Command> cmdPtr = nullptr;
 
-	// ── No user logged in ──────────────────────────────────────────────────
 	if (!currentUser)
 	{
 		try {
@@ -79,6 +76,10 @@ void Game::processCommand(const std::string& line)
 			else if (cmd == "login") {
 
 				cmdPtr = std::make_unique<LoginCommand>(*this, args);
+			}
+			else if (cmd == "exitFile") {
+				exitFile();
+				return;
 			}
 			else if (cmd == "exit")
 			{
@@ -96,7 +97,6 @@ void Game::processCommand(const std::string& line)
 		return;
 	}
 
-	// ── Commands available to every logged-in user ─────────────────────────
 	try {
 		if (cmd == "help") {
 			if (currentPlayer)
@@ -117,6 +117,10 @@ void Game::processCommand(const std::string& line)
 		else if (cmd == "changePassword") {
 			cmdPtr = std::make_unique<ChangePasswordCommand>(currentUser, args);
 		}
+		else if (cmd == "exitFile") {
+			exitFile();
+			return;
+		}
 		else if (cmd == "exit")
 		{
 			exit();
@@ -131,8 +135,6 @@ void Game::processCommand(const std::string& line)
 		std::cout << e.what() << std::endl;
 	}
 
-
-	// ── Player commands ────────────────────────────────────────────────────
 	if (currentPlayer)
 	{
 		try {
@@ -198,7 +200,6 @@ void Game::processCommand(const std::string& line)
 		return;
 	}
 
-	// ── TaskManager commands ───────────────────────────────────────────────
 	if (currentTaskManager)
 	{
 		try {
@@ -226,7 +227,6 @@ void Game::processCommand(const std::string& line)
 		}
 	}
 
-	// ── MarketManager commands ─────────────────────────────────────────────
 	if (currentMarketManager)
 	{
 		try {
@@ -257,12 +257,16 @@ void Game::exit()
 {
 	save();
 	std::cout << "Game saved successfully.\nGoodbye!" << std::endl;
+	megarun = false;
 	running = false;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  AUTH COMMANDS
-// ═══════════════════════════════════════════════════════════════════════════
+void Game::exitFile()
+{
+	save();
+	running = false;
+}
+
 void Game::registerUser(const std::string& username, const std::string& password, const std::string& type)
 {
 	for (const auto& p : players)
@@ -326,10 +330,6 @@ void Game::loginUser(const std::string& username, const std::string& password)
 	{
 		if (p->getUsername() == username)
 		{
-			// validate password via changePassword dry-run approach –
-			// instead, expose a check method or compare directly.
-			// We access password through a helper on User base.
-			// Since password is protected, we add a validate helper on User.
 			if (!p->validatePassword(password))
 			{
 				std::cout << "Incorrect password." << std::endl;
@@ -344,7 +344,6 @@ void Game::loginUser(const std::string& username, const std::string& password)
 			return;
 		}
 	}
-	// Check MarketManager
 	if (MarketManager::isRegistered())
 	{
 		auto& mm = MarketManager::getInstance();
@@ -361,7 +360,6 @@ void Game::loginUser(const std::string& username, const std::string& password)
 			return;
 		}
 	}
-	// Check TaskManager
 	if (TaskManager::isRegistered())
 	{
 		auto& tm = TaskManager::getInstance();
@@ -381,10 +379,6 @@ void Game::loginUser(const std::string& username, const std::string& password)
 
 	std::cout << "User not found." << std::endl;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  SHARED COMMANDS
-// ═══════════════════════════════════════════════════════════════════════════
 
 void Game::logout()
 {
@@ -416,9 +410,6 @@ void Game::cmdChangePassword(const std::vector<std::string>& args)
 	else
 		std::cout << "Incorrect old password." << std::endl;
 }
-// ═══════════════════════════════════════════════════════════════════════════
-//  UTILITY
-// ═══════════════════════════════════════════════════════════════════════════
 
 std::vector<Player*> Game::allPlayers() const
 {
@@ -428,9 +419,6 @@ std::vector<Player*> Game::allPlayers() const
 	return result;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  SAVE / LOAD
-// ═══════════════════════════════════════════════════════════════════════════
 
 namespace fs = std::filesystem;
 
@@ -446,8 +434,7 @@ std::vector<std::string> Game::getSaveFiles() const
 
 	for (const auto& entry : fs::directory_iterator("saves"))
 	{
-		if (entry.is_regular_file() &&
-			entry.path().extension() == ".txt")
+		if (entry.is_regular_file() && entry.path().extension() == ".txt")
 		{
 			saves.push_back(entry.path().string());
 		}
@@ -476,12 +463,8 @@ void Game::selectSaveFile()
 
 	std::cout << "\n0. Create new save\n";
 
-	int choice;
-
 	std::cout << "\nChoice: ";
-	std::cin >> choice;
-
-	std::cin.ignore();
+	int choice = safeReadInt(0, saves.size());
 
 	if (choice == 0)
 	{
@@ -526,42 +509,35 @@ void Game::loadFromFile(std::string filename)
 
 	for (size_t i = 0; i < playerCount; i++)
 	{
-		std::string type, uname, pwd;
-		in >> type >> uname >> pwd;
-		auto player = std::make_unique<Player>(uname, pwd);
+		std::string type, username, password;
+		in >> type >> username >> password;
+		auto player = std::make_unique<Player>(username, password);
 		player->loadFromFile(in);
 		players.push_back(std::move(player));
 	}
 
-	// MarketManager
-	int mmFlag;
-	in >> mmFlag;
-	if (mmFlag)
+	int marketManagerFlag;
+	in >> marketManagerFlag;
+	if (marketManagerFlag)
 	{
-		std::string uname, pwd;
-		in >> uname >> pwd;
-		MarketManager::getInstance().setCredentials(uname, pwd);
+		std::string username, password;
+		in >> username >> password;
+		MarketManager::getInstance().setCredentials(username, password);
 	}
 
-	// TaskManager
-	int tmFlag;
-	in >> tmFlag;
-	if (tmFlag)
+	int taskManagerFlag;
+	in >> taskManagerFlag;
+	if (taskManagerFlag)
 	{
-		std::string uname, pwd;
-		in >> uname >> pwd;
-		TaskManager::getInstance().setCredentials(uname, pwd);
+		std::string username, password;
+		in >> username >> password;
+		TaskManager::getInstance().setCredentials(username, password);
 	}
 
-	// Market state
 	market.loadFromFile(in);
 
-	// TaskBoard state (replaces the default tasks)
-	// First clear the default tasks we inserted in the constructor
-	// by re-initialising via loadFromFile
 	taskBoard.loadFromFile(in);
 
-	//std::cout << "Game loaded successfully." << std::endl;
 }
 void Game::save()
 {
@@ -572,36 +548,39 @@ void Game::save()
 		return;
 	}
 
-	// Players
 	out << players.size() << "\n";
 	for (const auto& p : players)
 		p->saveToFile(out);
 
-	// MarketManager
 	out << (MarketManager::isRegistered() ? 1 : 0) << "\n";
 	if (MarketManager::isRegistered())
 	{
-		auto& mm = MarketManager::getInstance();
-		out << mm.getUsername() << " " << mm.getPasswordRaw() << "\n";
+		auto& marketManager = MarketManager::getInstance();
+		out << marketManager.getUsername() << " " << marketManager.getPasswordRaw() << "\n";
 	}
 
-	// TaskManager
 	out << (TaskManager::isRegistered() ? 1 : 0) << "\n";
 	if (TaskManager::isRegistered())
 	{
-		auto& tm = TaskManager::getInstance();
-		out << tm.getUsername() << " " << tm.getPasswordRaw() << "\n";
+		auto& taskManager = TaskManager::getInstance();
+		out << taskManager.getUsername() << " " << taskManager.getPasswordRaw() << "\n";
 	}
 
-	// Market state
 	market.saveToFile(out);
 
-	// TaskBoard state
 	taskBoard.saveToFile(out);
 }
 
 void Game::load()
 {
+	currentUser = nullptr;
+	currentPlayer = nullptr;
+	currentMarketManager = nullptr;
+	currentTaskManager = nullptr;
+	MarketManager::getInstance().reset();
+	TaskManager::getInstance().reset();
+	players.clear();
+	market.reset();
 	selectSaveFile();
 }
 void Game::showHelpNotLoggedIn() const
@@ -610,6 +589,7 @@ void Game::showHelpNotLoggedIn() const
 		<< CYAN << "help\n" << RESET
 		<< "register <username> <password> <type>\n"
 		<< "login <username> <password>\n"
+		<< RED << "exitFile\n"
 		<< BOLDRED << "exit\n" << RESET;
 }
 

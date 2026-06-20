@@ -39,58 +39,46 @@
 class Game
 {
 private:
-	
-    // ── State ──────────────────────────────────────────────────────────────
-    std::vector<std::unique_ptr<Player>> players; // all registered Players
+    std::vector<std::unique_ptr<Player>> players;
     User* currentUser;
     Player* currentPlayer;
     TaskManager* currentTaskManager;
     MarketManager* currentMarketManager;
     bool running;
+    bool megarun;
 
-    // Singletons – stored as references so we never delete them
     Market& market;
     TaskBoard& taskBoard;
     ScoreBoard& scoreboard;
 
-    // ── Internal helpers ───────────────────────────────────────────────────
+    
     void printHeader() const;
     void processCommand(const std::string& line);
 
     void exit();
+    void exitFile();
 
-    
-    // Unauthenticated commands
     void registerUser(const std::string& username,
         const std::string& password,
         const std::string& type);
     void loginUser(const std::string& username, const std::string& password);
     void logout();
 
-    // Commands available to all logged-in users
     void cmdChangePassword(const std::vector<std::string>& args);
 
-	//comand helpers
 	void showHelpNotLoggedIn() const;
 	void showHelpPlayer() const;
 	void showHelpTaskManager() const;
 	void showHelpMarketManager() const;
 
-    // Save / load
     std::string currentSaveFile;
     void selectSaveFile();
     std::vector<std::string> getSaveFiles() const;
-
-   // static const char* SAVE_FILE;
 
     void loadFromFile(std::string filename);
     void save();
     void load();
 
-    // Utility
-    //Player* currentPlayer() const;  // nullptr if not a Player
-    //TaskManager* currentTaskManager() const;
-    //MarketManager* currentMarketManager() const;
     std::vector<Player*> allPlayers() const;
 
 public:
@@ -101,5 +89,4 @@ public:
 	friend class ChangePasswordCommand;
     Game();
     void run();
-   
 };

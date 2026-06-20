@@ -9,9 +9,9 @@ Player::Player(const std::string& username, const std::string& password)
 {
 }
 
-unsigned Player::getId()      const { return id; }
-double   Player::getBalance() const { return balance; }
-int      Player::getScore()   const { return score; }
+unsigned Player::getId() const { return id; }
+double Player::getBalance() const { return balance; }
+int Player::getScore() const { return score; }
 Barn& Player::getBarn() { return barn; }
 Farm& Player::getFarm() { return farm; }
 

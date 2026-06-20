@@ -3,7 +3,6 @@
 #include "ProductType.h"
 #include <iostream>
 
-// Private constructor – dummy credentials; real ones set via setCredentials
 TaskManager::TaskManager(const std::string& username, const std::string& password)
     : User(username, password)
 {
@@ -42,7 +41,6 @@ void TaskManager::showTasks() const
 bool TaskManager::addTask(const std::string& productName, unsigned quantity,
     double rewardBalance, int rewardScore)
 {
-    // Convert name string to ProductType
     ProductType pt = ProductType::Undefined;
     for (int i = 1; i <= 8; i++)
     {
@@ -57,7 +55,6 @@ bool TaskManager::addTask(const std::string& productName, unsigned quantity,
         std::cout << "Unknown product: " << productName << std::endl;
         return false;
     }
-    // Build a minimal Product to satisfy TaskBoard::addTask signature
     Product p(pt, 0, 0, ProductType::Undefined, 0);
     TaskBoard::getInstance().addTask(p, quantity,
         rewardBalance,
@@ -68,4 +65,9 @@ bool TaskManager::addTask(const std::string& productName, unsigned quantity,
 bool TaskManager::removeTask(unsigned taskId)
 {
     return TaskBoard::getInstance().removeTask(taskId);
+}
+void TaskManager::reset() {
+    username = "";
+    password = "";
+    taskManagerRegistered = false;
 }

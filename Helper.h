@@ -28,3 +28,5 @@ const char TXT_EXTENSION[] = ".txt";
 
 void clearConsole();
 void printWelcomeMessage();
+void clearInput();
+int safeReadInt(int min, int max);

@@ -21,4 +21,5 @@ public:
     void openMarketCatalog() const;
     bool restock(ProductType type, unsigned quantity);
     bool changePrice(ProductType type, double newPrice);
+    void reset();
 };

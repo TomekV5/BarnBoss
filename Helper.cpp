@@ -35,3 +35,25 @@ void printWelcomeMessage()
 	std::cout << "===========================================\n" << RESET;
 }
 
+void clearInput()
+{
+	std::cin.clear();
+	std::cin.ignore(10000, '\n');
+}
+
+int safeReadInt(int min, int max)
+{
+	int value;
+	while (true) {
+		std::cin >> value;
+
+		if (!std::cin.fail() && value >= min && value <= max) {
+			clearInput();
+			return value;
+		}
+
+		std::cout << RED << "Invalid input! Try again: " << RESET;
+		clearInput();
+	}
+}
+

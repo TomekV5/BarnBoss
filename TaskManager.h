@@ -24,4 +24,5 @@ public:
     bool addTask(const std::string& productName, unsigned quantity,
         double rewardBalance, int rewardScore);
     bool removeTask(unsigned taskId);
+    void reset();
 };

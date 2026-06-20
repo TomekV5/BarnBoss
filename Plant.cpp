@@ -1,9 +1,6 @@
 #include "Plant.h"
 #include <stdexcept>
 
-// Spec:
-//  Wheat Seed (id 1) -> required cycles: 3 -> gives 1 x Wheat
-//  Corn  Seed (id 2) -> required cycles: 4 -> gives 1 x Corn
 Plant::Plant(ProductType seedType) : Product()
 {
     switch (seedType)
